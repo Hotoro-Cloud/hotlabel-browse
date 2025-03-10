@@ -1,12 +1,249 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from "react";
+import { fileData, FileItem, adData } from "@/utils/fileData";
+import FileCard from "@/components/FileCard";
+import PopupAd from "@/components/PopupAd";
+import DownloadModal from "@/components/DownloadModal";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import { ArrowDown, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeAds, setActiveAds] = useState<Array<{ id: string; position: "center" | "top-right" | "bottom-left" | "bottom-right" | "top-left"; }>>([]);
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Handle scrolling effects
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const filteredFiles = searchTerm
+    ? fileData.filter(file => 
+        file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        file.description.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : fileData;
+
+  const handleDownloadClick = (file: FileItem) => {
+    setSelectedFile(file);
+    setIsDownloadModalOpen(true);
+  };
+
+  const handleDownloadConfirm = () => {
+    // This will trigger an ad popup after download confirmation
+    setTimeout(() => {
+      const adPositions: Array<"center" | "top-right" | "bottom-left" | "bottom-right" | "top-left"> = ["top-right", "bottom-left", "bottom-right", "top-left"];
+      
+      // First ad (fixed position - center)
+      const firstAdIndex = Math.floor(Math.random() * adData.length);
+      setActiveAds([{ id: `popup-${Date.now()}-1`, position: "center" }]);
+      
+      // Second and third ads with delays
+      setTimeout(() => {
+        setActiveAds(prev => [
+          ...prev, 
+          { 
+            id: `popup-${Date.now()}-2`, 
+            position: adPositions[Math.floor(Math.random() * adPositions.length)]
+          }
+        ]);
+      }, 1500);
+      
+      setTimeout(() => {
+        setActiveAds(prev => [
+          ...prev, 
+          { 
+            id: `popup-${Date.now()}-3`, 
+            position: adPositions[Math.floor(Math.random() * adPositions.length)]
+          }
+        ]);
+      }, 3000);
+    }, 2000);
+  };
+
+  const handleCloseDownloadModal = () => {
+    setIsDownloadModalOpen(false);
+    if (activeAds.length > 0) {
+      toast({
+        title: "Download processed",
+        description: "Close the popup ads to finish the download.",
+      });
+    }
+  };
+
+  const handleCloseAd = (adId: string) => {
+    setActiveAds(prev => prev.filter(ad => ad.id !== adId));
+    
+    // When all ads are closed, simulate file being downloaded
+    if (activeAds.length === 1 && selectedFile) {
+      const mockFileObjectUrl = URL.createObjectURL(new Blob(['mock content'], { type: 'text/plain' }));
+      const link = document.createElement('a');
+      link.href = mockFileObjectUrl;
+      link.download = selectedFile.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download successful!",
+        description: `${selectedFile.name} has been downloaded.`,
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <AnimatedBackground />
+      
+      {/* Header */}
+      <header className={cn(
+        "fixed top-0 left-0 right-0 z-30 transition-all duration-300 py-4",
+        scrolled ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+      )}>
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold text-lg">F</div>
+            <h1 className="text-xl font-semibold">FileVault</h1>
+          </div>
+          
+          <div className="hidden md:flex items-center space-x-1">
+            <Button variant="ghost">Home</Button>
+            <Button variant="ghost">Browse</Button>
+            <Button variant="ghost">About</Button>
+            <Button variant="default" className="ml-2">Go Premium</Button>
+          </div>
+          
+          <Button variant="ghost" size="icon" className="md:hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </Button>
+        </div>
+      </header>
+      
+      <main className="flex-grow pt-24 pb-16">
+        {/* Hero Section */}
+        <section className="container mx-auto px-4 py-12 text-center">
+          <div className="max-w-3xl mx-auto">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+              Download Files with <span className="text-gradient">Ease</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8">
+              Fast, secure, and convenient file downloads for all your needs
+            </p>
+            
+            <div className="relative max-w-xl mx-auto mb-12">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-blue-400/20 rounded-lg blur-xl"></div>
+              <div className="relative flex items-center rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 shadow-lg bg-background">
+                <Search className="absolute left-3 text-muted-foreground w-5 h-5" />
+                <Input 
+                  type="text"
+                  placeholder="Search for files..."
+                  className="pl-10 py-6 border-0 text-base focus-visible:ring-0 focus-visible:ring-offset-0"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Button className="absolute right-1.5">
+                  Search
+                </Button>
+              </div>
+            </div>
+            
+            <div className="hidden md:flex items-center justify-center animate-bounce">
+              <ArrowDown className="h-8 w-8 text-muted-foreground opacity-70" />
+            </div>
+          </div>
+        </section>
+        
+        {/* Files Section */}
+        <section className="container mx-auto px-4 py-8">
+          <h2 className="text-2xl font-semibold mb-8">
+            {searchTerm ? "Search Results" : "Popular Files"}
+          </h2>
+          
+          {filteredFiles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredFiles.map((file) => (
+                <FileCard 
+                  key={file.id} 
+                  file={file} 
+                  onDownload={handleDownloadClick}
+                  className="animate-fade-in" 
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <h3 className="text-xl font-medium mb-2">No files found</h3>
+              <p className="text-muted-foreground">
+                Try searching with different keywords
+              </p>
+            </div>
+          )}
+        </section>
+      </main>
+      
+      {/* Footer */}
+      <footer className="border-t border-gray-200 dark:border-gray-800 py-8 bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-4 md:mb-0">
+              <div className="flex items-center space-x-2">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold">F</div>
+                <span className="font-semibold">FileVault</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Download files with ease and security
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-6">
+              <a href="#" className="text-sm hover:text-primary transition-colors">Terms</a>
+              <a href="#" className="text-sm hover:text-primary transition-colors">Privacy</a>
+              <a href="#" className="text-sm hover:text-primary transition-colors">Contact</a>
+              <a href="#" className="text-sm hover:text-primary transition-colors">About</a>
+            </div>
+            
+            <div className="mt-4 md:mt-0">
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} FileVault. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
+      
+      {/* Download Modal */}
+      {selectedFile && (
+        <DownloadModal
+          file={selectedFile}
+          isOpen={isDownloadModalOpen}
+          onClose={handleCloseDownloadModal}
+          onDownloadConfirm={handleDownloadConfirm}
+        />
+      )}
+      
+      {/* Popup Ads */}
+      {activeAds.map((ad, index) => (
+        <PopupAd
+          key={ad.id}
+          ad={adData[index % adData.length]}
+          onClose={() => handleCloseAd(ad.id)}
+          position={ad.position}
+          delay={index * 200}
+        />
+      ))}
     </div>
   );
 };
