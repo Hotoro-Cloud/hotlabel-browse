@@ -1,7 +1,8 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Types for HotLabel SDK
 interface HotLabelSDK {
@@ -124,6 +125,45 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
         theme: "light",
         customTaskRenderer: true
       });
+      
+      // Set up a custom event listener for task completion
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        
+        // Check if the clicked element is a hotlabel option button
+        if (target.classList.contains('hotlabel-option')) {
+          // Get the parent container
+          const taskElement = target.closest('.hotlabel-task');
+          if (taskElement) {
+            const taskId = taskElement.getAttribute('data-task-id');
+            // Get the container that has the data-ad-id
+            const container = document.querySelector('.hotlabel-container');
+            if (container) {
+              const adId = container.getAttribute('data-ad-id');
+              
+              // Send a custom event that task was completed
+              setTimeout(() => {
+                const customEvent = new CustomEvent('hotlabel-task-completed', {
+                  detail: { adId, taskId }
+                });
+                document.dispatchEvent(customEvent);
+                
+                // Update metrics
+                setTasksCompleted(prev => prev + 1);
+                setPublisherEarnings(prev => {
+                  const increment = 0.04; // $0.04 per label
+                  return parseFloat((prev + increment).toFixed(2));
+                });
+                setAdsBlocked(prev => prev + 3); // Each task replaces approximately 3 ads
+                setUserExperience(prev => {
+                  const newValue = Math.min(prev + 0.1, 10.0);
+                  return parseFloat(newValue.toFixed(1));
+                });
+              }, 2000); // Delay to show completion message
+            }
+          }
+        }
+      });
     }
   };
 
@@ -152,18 +192,20 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
       task.remove();
     });
   };
-
+  
   const startMetricsUpdates = () => {
     // Only start if not already started
     if (metricsStarted.current) return;
     
     metricsStarted.current = true;
     
-    // Reset metrics
-    setTasksCompleted(0);
-    setPublisherEarnings(0);
-    setUserExperience(7.5);
-    setAdsBlocked(0);
+    // Reset metrics if switching from traditional to HotLabel
+    if (!isEnabled) {
+      setTasksCompleted(0);
+      setPublisherEarnings(0);
+      setUserExperience(7.5);
+      setAdsBlocked(0);
+    }
     
     // Update metrics periodically (simulating user interactions)
     metricsInterval.current = window.setInterval(() => {
@@ -171,7 +213,7 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
       if (Math.random() < 0.3) { // 30% chance each interval
         setTasksCompleted(prev => prev + 1);
         setPublisherEarnings(prev => {
-          const increment = 0.02; // Fixed increment for stability
+          const increment = 0.04; // Fixed increment for stability
           return parseFloat((prev + increment).toFixed(2));
         });
         
@@ -195,10 +237,6 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
     }
   };
 
-  const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsEnabled(e.target.checked);
-  };
-
   return (
     <div className={cn(
       "fixed top-20 right-5 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 overflow-hidden",
@@ -209,19 +247,16 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
       </div>
       <div className="p-4">
         <div className="flex items-center mb-3">
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox"
-              value=""
-              className="sr-only peer"
+          <div className="flex items-center gap-2">
+            <Switch 
               checked={isEnabled}
-              onChange={handleToggleChange}
+              onCheckedChange={setIsEnabled}
+              id="hotlabel-toggle"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-            <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+            <Label htmlFor="hotlabel-toggle" className="text-sm">
               Use HotLabel
-            </span>
-          </label>
+            </Label>
+          </div>
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
           Currently showing: <span className="font-medium">{isEnabled ? "HotLabel Tasks" : "Traditional Ads"}</span>

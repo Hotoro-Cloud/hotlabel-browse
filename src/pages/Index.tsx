@@ -4,12 +4,47 @@ import FileCard from "@/components/FileCard";
 import PopupAd from "@/components/PopupAd";
 import DownloadModal from "@/components/DownloadModal";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import HotLabelToggle from "@/components/hotlabel-toggle"; // Import the HotLabelToggle component
+import HotLabelToggle from "@/components/hotlabel-toggle";
 import { ArrowDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+
+// Define animations that will be used 
+const AnimationStyles = () => (
+  <style>
+    {`
+      @keyframes scale-in {
+        0% { opacity: 0; transform: scale(0.8); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      
+      @keyframes scale-out {
+        0% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.8); }
+      }
+      
+      @keyframes pulse {
+        0% { opacity: 0.8; }
+        50% { opacity: 1; }
+        100% { opacity: 0.8; }
+      }
+      
+      .animate-scale-in {
+        animation: scale-in 0.3s ease-out forwards;
+      }
+      
+      .animate-scale-out {
+        animation: scale-out 0.3s ease-in forwards;
+      }
+      
+      .animate-pulse {
+        animation: pulse 2s ease-in-out infinite;
+      }
+    `}
+  </style>
+);
 
 const Index = () => {
   const { toast } = useToast();
@@ -18,10 +53,11 @@ const Index = () => {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [hotLabelEnabled, setHotLabelEnabled] = useState(false); // State for HotLabel toggle
+  const [hotLabelEnabled, setHotLabelEnabled] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Handle scrolling effects
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
@@ -32,9 +68,31 @@ const Index = () => {
   // Listen for hotlabel-task-completed events
   useEffect(() => {
     const handleTaskCompleted = (event: CustomEvent) => {
+      console.log("Task completed event received:", event.detail);
       const { adId } = event.detail;
+      
       if (adId) {
-        handleCloseAd(adId);
+        // Add a small delay to allow completion animation to play
+        setTimeout(() => {
+          handleCloseAd(adId);
+          
+          // Show a success notification
+          toast({
+            title: "Task completed!",
+            description: "Thanks for your contribution. Your download will start shortly.",
+          });
+          
+          // Mark as downloading
+          setIsDownloading(true);
+          
+          // If all ads are closed, simulate file being downloaded
+          if (selectedFile) {
+            setTimeout(() => {
+              simulateDownload();
+              setIsDownloading(false);
+            }, 1000);
+          }
+        }, 500);
       }
     };
 
@@ -43,7 +101,7 @@ const Index = () => {
     return () => {
       document.removeEventListener('hotlabel-task-completed', handleTaskCompleted as EventListener);
     };
-  }, []);
+  }, [selectedFile]);
 
   const filteredFiles = searchTerm
     ? fileData.filter(file => 
@@ -58,19 +116,19 @@ const Index = () => {
   };
 
   const handleDownloadConfirm = () => {
-    // If HotLabel is enabled, show just one central task
-    if (hotLabelEnabled) {
-      // Only create a single ad entry in the "center" position
-      setActiveAds([{ id: `popup-${Date.now()}-1`, position: "center" }]);
-      return;
-    }
-
-    // Traditional multiple popup ads flow
-    setTimeout(() => {
+    // With the new approach, we don't need to show popup ads when using HotLabel
+    // as the task will be directly embedded in the download modal
+    if (!hotLabelEnabled) {
+      // Traditional multiple popup ads flow
       const adPositions: Array<"center" | "top-right" | "bottom-left" | "bottom-right" | "top-left"> = ["top-right", "bottom-left", "bottom-right", "top-left"];
       
       // First ad (fixed position - center)
       setActiveAds([{ id: `popup-${Date.now()}-1`, position: "center" }]);
+      
+      toast({
+        title: "Popup ads appearing",
+        description: "Close all ads to continue your download",
+      });
       
       // Second and third ads with delays
       setTimeout(() => {
@@ -92,7 +150,7 @@ const Index = () => {
           }
         ]);
       }, 3000);
-    }, 2000);
+    }
   };
 
   // Simulate immediate download when all tasks/ads are closed
@@ -115,21 +173,13 @@ const Index = () => {
 
   const handleCloseDownloadModal = () => {
     setIsDownloadModalOpen(false);
-    if (activeAds.length > 0) {
-      toast({
-        title: "Download processed",
-        description: hotLabelEnabled 
-          ? "Complete the task to finish the download." 
-          : "Close the popup ads to finish the download.",
-      });
-    }
   };
 
   const handleCloseAd = (adId: string) => {
     setActiveAds(prev => prev.filter(ad => ad.id !== adId));
     
     // When all ads are closed, simulate file being downloaded
-    if (activeAds.length === 1 && selectedFile) {
+    if (activeAds.length === 1 && selectedFile && !isDownloading) {
       simulateDownload();
     }
   };
@@ -141,11 +191,19 @@ const Index = () => {
     if (enabled) {
       // Clear any active ads when HotLabel is enabled
       setActiveAds([]);
+      
+      toast({
+        title: hotLabelEnabled ? "HotLabel Disabled" : "HotLabel Enabled",
+        description: hotLabelEnabled 
+          ? "Switched back to traditional popup ads"
+          : "Now you'll solve one AI task instead of multiple popups",
+      });
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
+      <AnimationStyles />
       <AnimatedBackground />
       
       {/* HotLabelToggle Component */}
@@ -271,13 +329,14 @@ const Index = () => {
         </div>
       </footer>
       
-      {/* Download Modal */}
+     {/* Download Modal */}
       {selectedFile && (
         <DownloadModal
           file={selectedFile}
           isOpen={isDownloadModalOpen}
           onClose={handleCloseDownloadModal}
           onDownloadConfirm={handleDownloadConfirm}
+          hotLabelEnabled={hotLabelEnabled}
         />
       )}
       
@@ -289,21 +348,9 @@ const Index = () => {
           onClose={() => handleCloseAd(ad.id)}
           position={ad.position}
           delay={index * 200}
+          className="popup-ad"
         />
       ))}
-      
-      {/* HotLabel Task Container - Single central container when HotLabel is enabled */}
-      {hotLabelEnabled && activeAds.length > 0 && (
-        <div 
-          key="hotlabel-container"
-          className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hotlabel-container"
-          data-ad-id={activeAds[0].id}
-        >
-          <div className="glass-card w-96 rounded-2xl overflow-hidden transition-all duration-300">
-            {/* This empty container will be filled by the HotLabel SDK */}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
