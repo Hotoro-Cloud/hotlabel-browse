@@ -69,7 +69,7 @@ const Index = () => {
   useEffect(() => {
     const handleTaskCompleted = (event: CustomEvent) => {
       console.log("Task completed event received:", event.detail);
-      const { adId } = event.detail;
+      const { adId, taskId } = event.detail;
       
       if (adId) {
         // Add a small delay to allow completion animation to play
@@ -87,8 +87,8 @@ const Index = () => {
           
           // If all ads are closed, simulate file being downloaded
           if (selectedFile) {
+            simulateDownload();
             setTimeout(() => {
-              simulateDownload();
               setIsDownloading(false);
             }, 1000);
           }
@@ -102,6 +102,7 @@ const Index = () => {
       document.removeEventListener('hotlabel-task-completed', handleTaskCompleted as EventListener);
     };
   }, [selectedFile]);
+  
 
   const filteredFiles = searchTerm
     ? fileData.filter(file => 

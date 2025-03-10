@@ -127,10 +127,27 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
     // Simulate task completion
     setHotLabelTaskCompleted(true);
     
-    // Show completion message
+    // Dispatch a custom event for task completion
+    const taskId = taskData?.task_id || `modal-task-${Date.now()}`;
+    const customEvent = new CustomEvent('hotlabel-task-completed', {
+      detail: { 
+        adId: `modal-ad-${Date.now()}`, 
+        taskId: taskId,
+        choice: choice
+      }
+    });
+    document.dispatchEvent(customEvent);
+    console.log("Dispatched task completion event from modal:", taskId);
+    
+    // Show completion message and start download after delay
     setTimeout(() => {
       // Start download automatically when task is completed
       startDownload();
+      
+      // Close the modal after a delay to allow success message to be seen
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     }, 1000);
   };
 

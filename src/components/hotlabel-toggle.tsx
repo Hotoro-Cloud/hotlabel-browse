@@ -135,34 +135,55 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
           // Get the parent container
           const taskElement = target.closest('.hotlabel-task');
           if (taskElement) {
-            const taskId = taskElement.getAttribute('data-task-id');
+            const taskId = taskElement?.getAttribute('data-task-id') || `task-${Date.now()}`;
+            
             // Get the container that has the data-ad-id
-            const container = document.querySelector('.hotlabel-container');
-            if (container) {
-              const adId = container.getAttribute('data-ad-id');
+            const container = taskElement.closest('.hotlabel-container') || document.querySelector('.hotlabel-container');
+            const adId = container?.getAttribute('data-ad-id') || `ad-${Date.now()}`;
+            
+            console.log("HotLabel task selected:", { taskId, adId });
+            
+            // Send a custom event that task was completed
+            setTimeout(() => {
+              const customEvent = new CustomEvent('hotlabel-task-completed', {
+                detail: { adId, taskId }
+              });
+              document.dispatchEvent(customEvent);
               
-              // Send a custom event that task was completed
-              setTimeout(() => {
-                const customEvent = new CustomEvent('hotlabel-task-completed', {
-                  detail: { adId, taskId }
-                });
-                document.dispatchEvent(customEvent);
-                
-                // Update metrics
-                setTasksCompleted(prev => prev + 1);
-                setPublisherEarnings(prev => {
-                  const increment = 0.04; // $0.04 per label
-                  return parseFloat((prev + increment).toFixed(2));
-                });
-                setAdsBlocked(prev => prev + 3); // Each task replaces approximately 3 ads
-                setUserExperience(prev => {
-                  const newValue = Math.min(prev + 0.1, 10.0);
-                  return parseFloat(newValue.toFixed(1));
-                });
-              }, 2000); // Delay to show completion message
-            }
+              console.log("Dispatched task completion event:", { adId, taskId });
+              
+              // Update metrics
+              setTasksCompleted(prev => prev + 1);
+              setPublisherEarnings(prev => {
+                const increment = 0.04; // $0.04 per label
+                return parseFloat((prev + increment).toFixed(2));
+              });
+              setAdsBlocked(prev => prev + 3); // Each task replaces approximately 3 ads
+              setUserExperience(prev => {
+                const newValue = Math.min(prev + 0.1, 10.0);
+                return parseFloat(newValue.toFixed(1));
+              });
+            }, 2000); // Delay to show completion message
           }
         }
+      });
+      
+      // Also listen for task completed events from the download modal
+      document.addEventListener('hotlabel-task-completed', (e: Event) => {
+        const event = e as CustomEvent;
+        console.log("Task completed event captured in HotLabelToggle:", event.detail);
+        
+        // Update metrics on any task completion
+        setTasksCompleted(prev => prev + 1);
+        setPublisherEarnings(prev => {
+          const increment = 0.04; // $0.04 per label
+          return parseFloat((prev + increment).toFixed(2));
+        });
+        setAdsBlocked(prev => prev + 3);
+        setUserExperience(prev => {
+          const newValue = Math.min(prev + 0.1, 10.0);
+          return parseFloat(newValue.toFixed(1));
+        });
       });
     }
   };
