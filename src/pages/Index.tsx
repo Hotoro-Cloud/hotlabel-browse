@@ -56,6 +56,9 @@ const Index = () => {
   const [scrolled, setScrolled] = useState(false);
   const [hotLabelEnabled, setHotLabelEnabled] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [totalAdsToClose, setTotalAdsToClose] = useState(0);
+  const [remainingAdsToClose, setRemainingAdsToClose] = useState(0);
+  const [downloadReady, setDownloadReady] = useState(false);
 
   // Handle scrolling effects
   useEffect(() => {
@@ -121,37 +124,80 @@ const Index = () => {
     // With the new approach, we don't need to show popup ads when using HotLabel
     // as the task will be directly embedded in the download modal
     if (!hotLabelEnabled) {
-      // Traditional multiple popup ads flow
-      const adPositions: Array<"center" | "top-right" | "bottom-left" | "bottom-right" | "top-left"> = ["top-right", "bottom-left", "bottom-right", "top-left"];
+      // Traditional multiple popup ads flow - ENHANCED for more intrusive experience
+      const adPositions: Array<"center" | "top-right" | "bottom-left" | "bottom-right" | "top-left"> = [
+        "center", "top-right", "bottom-left", "bottom-right", "top-left"
+      ];
+      
+      // Track how many ads need to be closed
+      setTotalAdsToClose(5); // Increased from 3 to 5
+      setRemainingAdsToClose(5);
       
       // First ad (fixed position - center)
       setActiveAds([{ id: `popup-${Date.now()}-1`, position: "center" }]);
       
       toast({
         title: "Popup ads appearing",
-        description: "Close all ads to continue your download",
+        description: "Close all 5 ads to continue your download",
       });
       
-      // Second and third ads with delays
+      // Second and third ads with short delays
       setTimeout(() => {
         setActiveAds(prev => [
           ...prev, 
           { 
             id: `popup-${Date.now()}-2`, 
-            position: adPositions[Math.floor(Math.random() * adPositions.length)]
+            position: adPositions[1]
           }
         ]);
-      }, 1500);
+      }, 800); // Reduced delay to make them appear more aggressively
       
       setTimeout(() => {
         setActiveAds(prev => [
           ...prev, 
           { 
             id: `popup-${Date.now()}-3`, 
-            position: adPositions[Math.floor(Math.random() * adPositions.length)]
+            position: adPositions[2]
           }
         ]);
-      }, 3000);
+      }, 1600);
+      
+      // Fourth and fifth ads with further delays
+      setTimeout(() => {
+        setActiveAds(prev => [
+          ...prev, 
+          { 
+            id: `popup-${Date.now()}-4`, 
+            position: adPositions[3]
+          }
+        ]);
+      }, 2500);
+      
+      setTimeout(() => {
+        setActiveAds(prev => [
+          ...prev, 
+          { 
+            id: `popup-${Date.now()}-5`, 
+            position: adPositions[4]
+          }
+        ]);
+        
+        // After all ads have been displayed, show an additional "Follow-up" ad
+        // that appears if the user tries to close some of the initial ads
+        setTimeout(() => {
+          if (activeAds.length > 0) {
+            setActiveAds(prev => [
+              ...prev,
+              {
+                id: `popup-${Date.now()}-followup`,
+                position: "center" // Place in center to be most disruptive
+              }
+            ]);
+            setTotalAdsToClose(prev => prev + 1);
+            setRemainingAdsToClose(prev => prev + 1);
+          }
+        }, 5000);
+      }, 3500);
     }
   };
 
@@ -178,11 +224,27 @@ const Index = () => {
   };
 
   const handleCloseAd = (adId: string) => {
+    // Remove the ad from active ads
     setActiveAds(prev => prev.filter(ad => ad.id !== adId));
     
-    // When all ads are closed, simulate file being downloaded
-    if (activeAds.length === 1 && selectedFile && !isDownloading) {
-      simulateDownload();
+    // Decrement remaining ads counter
+    setRemainingAdsToClose(prev => prev - 1);
+    
+    // Check if all ads are closed
+    if (remainingAdsToClose <= 1) { // Using 1 because state hasn't updated yet
+      // Enable download button
+      setDownloadReady(true);
+      
+      toast({
+        title: "Download Ready",
+        description: "You can now download your file.",
+      });
+    } else {
+      // Show toast with remaining ads count
+      toast({
+        title: "Ad Closed",
+        description: `${remainingAdsToClose - 1} more ad${remainingAdsToClose - 1 > 1 ? 's' : ''} to close before download.`,
+      });
     }
   };
 
@@ -333,15 +395,16 @@ const Index = () => {
       </footer>
       
      {/* Download Modal */}
-      {selectedFile && (
-        <DownloadModal
-          file={selectedFile}
-          isOpen={isDownloadModalOpen}
-          onClose={handleCloseDownloadModal}
-          onDownloadConfirm={handleDownloadConfirm}
-          hotLabelEnabled={hotLabelEnabled}
-        />
-      )}
+     {selectedFile && (
+      <DownloadModal
+        file={selectedFile}
+        isOpen={isDownloadModalOpen}
+        onClose={handleCloseDownloadModal}
+        onDownloadConfirm={handleDownloadConfirm}
+        hotLabelEnabled={hotLabelEnabled}
+        downloadReady={downloadReady} // Add this prop
+      />
+    )}
       
       {/* Popup Ads - Only show when HotLabel is disabled */}
       {!hotLabelEnabled && activeAds.map((ad, index) => (

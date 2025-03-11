@@ -9,7 +9,8 @@ interface DownloadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDownloadConfirm: () => void;
-  hotLabelEnabled: boolean; 
+  hotLabelEnabled: boolean;
+  downloadReady: boolean;
   className?: string;
 }
 
@@ -50,6 +51,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
   onClose,
   onDownloadConfirm,
   hotLabelEnabled,
+  downloadReady,
   className,
 }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -382,12 +384,22 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
                 <Button 
                   className="flex-1 relative overflow-hidden" 
                   onClick={handleDownloadClick}
-                  disabled={!hotLabelEnabled && countDown > 0}
+                  // Only enable when using HotLabel OR all traditional ads are closed
+                  disabled={!hotLabelEnabled && !downloadReady && countDown > 0}
                 >
-                  {!hotLabelEnabled && countDown > 0 ? (
+                  {!hotLabelEnabled && !downloadReady ? (
                     <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2 animate-pulse" />
-                      <span>Wait {countDown}s</span>
+                      {countDown > 0 ? (
+                        <>
+                          <Clock className="w-4 h-4 mr-2 animate-pulse" />
+                          <span>Wait {countDown}s</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-4 h-4 mr-2" />
+                          <span>Close All Ads First</span>
+                        </>
+                      )}
                     </div>
                   ) : (
                     <div className="flex items-center">
