@@ -19,6 +19,7 @@ interface HotLabelSDK {
 interface HotLabelConfig {
   publisherId: string;
   adSlotSelector: string;
+  apiEndpoint: string;
   debug?: boolean;
   adReplacementRate?: number;
   theme?: "light" | "dark";
@@ -45,21 +46,26 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
   const [publisherEarnings, setPublisherEarnings] = useState(0);
   const [userExperience, setUserExperience] = useState(7.5);
   const [adsBlocked, setAdsBlocked] = useState(0);
-  const metricsInterval = useRef<number | null>(null);
-  const metricsStarted = useRef(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const statsInterval = useRef<number | null>(null);
+  const statsStarted = useRef(false);
+  
+  // Hardcoded API endpoint - change this to match your server location
+  const API_ENDPOINT = "http://localhost:8000";
 
   useEffect(() => {
     // Cleanup on unmount
     return () => {
-      if (metricsInterval.current) {
-        window.clearInterval(metricsInterval.current);
+      if (statsInterval.current) {
+        window.clearInterval(statsInterval.current);
       }
     };
   }, []);
 
   useEffect(() => {
     if (isEnabled) {
-      enableHotLabel();
+      setIsLoading(true);
+      enableHotLabel().finally(() => setIsLoading(false));
     } else {
       disableHotLabel();
     }
@@ -69,25 +75,58 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
       onChange(isEnabled);
     }
   }, [isEnabled, onChange]);
+  
+  // Listen for task completed events to update metrics
+  useEffect(() => {
+    const handleTaskCompleted = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log("Task completed event captured in HotLabelToggle:", customEvent.detail);
+      
+      // Update metrics on any task completion
+      updateMetricsOnTaskCompletion();
+    };
+    
+    // Add event listener
+    document.addEventListener('hotlabel-task-completed', handleTaskCompleted);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('hotlabel-task-completed', handleTaskCompleted);
+    };
+  }, []);
 
-  const enableHotLabel = () => {
+  const enableHotLabel = async () => {
     // Hide traditional ads
     hideTraditionalAds();
     
-    // Load and initialize HotLabel SDK if not already loaded
-    if (window.HotLabel) {
-      initializeHotLabel();
-    } else {
-      loadHotLabelScript(() => initializeHotLabel());
+    try {
+      // Load and initialize HotLabel SDK if not already loaded
+      if (window.HotLabel) {
+        await initializeHotLabel();
+      } else {
+        await loadHotLabelScript();
+        await initializeHotLabel();
+      }
+      
+      // Start metrics updates
+      startMetricsUpdates();
+      
+      toast({
+        title: "HotLabel Enabled",
+        description: "You'll now see a single AI task instead of multiple popup ads",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to enable HotLabel:", error);
+      toast({
+        title: "HotLabel Error",
+        description: "Failed to initialize HotLabel. Please try again.",
+        variant: "destructive"
+      });
+      
+      return false;
     }
-    
-    // Start metrics updates
-    startMetricsUpdates();
-    
-    toast({
-      title: "HotLabel Enabled",
-      description: "You'll now see a single AI task instead of multiple popup ads",
-    });
   };
 
   const disableHotLabel = () => {
@@ -108,84 +147,61 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
     }
   };
 
-  const loadHotLabelScript = (callback: () => void) => {
-    const script = document.createElement("script");
-    script.src = "/js/hotlabel-sdk.js";
-    script.onload = callback;
-    document.head.appendChild(script);
+  const loadHotLabelScript = () => {
+    return new Promise<void>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "/js/hotlabel-sdk.js";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load HotLabel SDK"));
+      document.head.appendChild(script);
+    });
   };
 
-  const initializeHotLabel = () => {
-    if (window.HotLabel) {
-      window.HotLabel.init({
-        publisherId: "demo-publisher",
-        adSlotSelector: ".hotlabel-container",
-        debug: true,
-        adReplacementRate: 1.0,
-        theme: "light",
-        customTaskRenderer: true
-      });
+  const initializeHotLabel = async () => {
+    return new Promise<void>((resolve, reject) => {
+      if (!window.HotLabel) {
+        reject(new Error("HotLabel SDK not available"));
+        return;
+      }
       
-      // Set up a custom event listener for task completion
-      document.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
+      try {
+        window.HotLabel.init({
+          publisherId: "demo-publisher",
+          adSlotSelector: ".hotlabel-container",
+          apiEndpoint: API_ENDPOINT,
+          debug: true,
+          adReplacementRate: 1.0,
+          theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
+          customTaskRenderer: true
+        });
         
-        // Check if the clicked element is a hotlabel option button
-        if (target.classList.contains('hotlabel-option')) {
-          // Get the parent container
-          const taskElement = target.closest('.hotlabel-task');
-          if (taskElement) {
-            const taskId = taskElement?.getAttribute('data-task-id') || `task-${Date.now()}`;
-            
-            // Get the container that has the data-ad-id
-            const container = taskElement.closest('.hotlabel-container') || document.querySelector('.hotlabel-container');
-            const adId = container?.getAttribute('data-ad-id') || `ad-${Date.now()}`;
-            
-            console.log("HotLabel task selected:", { taskId, adId });
-            
-            // Send a custom event that task was completed
-            setTimeout(() => {
-              const customEvent = new CustomEvent('hotlabel-task-completed', {
-                detail: { adId, taskId }
-              });
-              document.dispatchEvent(customEvent);
-              
-              console.log("Dispatched task completion event:", { adId, taskId });
-              
-              // Update metrics
-              setTasksCompleted(prev => prev + 1);
-              setPublisherEarnings(prev => {
-                const increment = 0.04; // $0.04 per label
-                return parseFloat((prev + increment).toFixed(2));
-              });
-              setAdsBlocked(prev => prev + 3); // Each task replaces approximately 3 ads
-              setUserExperience(prev => {
-                const newValue = Math.min(prev + 0.1, 10.0);
-                return parseFloat(newValue.toFixed(1));
-              });
-            }, 2000); // Delay to show completion message
-          }
+        // Verify initialization
+        if (!window.HotLabel.state.initialized) {
+          reject(new Error("HotLabel initialization failed"));
+          return;
         }
-      });
-      
-      // Also listen for task completed events from the download modal
-      document.addEventListener('hotlabel-task-completed', (e: Event) => {
-        const event = e as CustomEvent;
-        console.log("Task completed event captured in HotLabelToggle:", event.detail);
         
-        // Update metrics on any task completion
-        setTasksCompleted(prev => prev + 1);
-        setPublisherEarnings(prev => {
-          const increment = 0.04; // $0.04 per label
-          return parseFloat((prev + increment).toFixed(2));
-        });
-        setAdsBlocked(prev => prev + 3);
-        setUserExperience(prev => {
-          const newValue = Math.min(prev + 0.1, 10.0);
-          return parseFloat(newValue.toFixed(1));
-        });
-      });
-    }
+        // Test health check to ensure server connection
+        fetch(`${API_ENDPOINT}/health`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`Server responded with status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log("Server health check:", data);
+            resolve();
+          })
+          .catch(error => {
+            console.warn("Server health check failed:", error);
+            // Continue anyway with local mode
+            resolve();
+          });
+      } catch (error) {
+        reject(error);
+      }
+    });
   };
 
   const hideTraditionalAds = () => {
@@ -208,17 +224,30 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
   };
 
   const removeHotLabelTasks = () => {
-    const hotlabelTasks = document.querySelectorAll(".hotlabel-container");
+    const hotlabelTasks = document.querySelectorAll(".hotlabel-container .hotlabel-task");
     hotlabelTasks.forEach(task => {
       task.remove();
     });
   };
   
+  const updateMetricsOnTaskCompletion = () => {
+    setTasksCompleted(prev => prev + 1);
+    setPublisherEarnings(prev => {
+      const increment = 0.04; // $0.04 per label
+      return parseFloat((prev + increment).toFixed(2));
+    });
+    setAdsBlocked(prev => prev + 3); // Each task replaces approximately 3 ads
+    setUserExperience(prev => {
+      const newValue = Math.min(prev + 0.1, 10.0);
+      return parseFloat(newValue.toFixed(1));
+    });
+  };
+  
   const startMetricsUpdates = () => {
     // Only start if not already started
-    if (metricsStarted.current) return;
+    if (statsStarted.current) return;
     
-    metricsStarted.current = true;
+    statsStarted.current = true;
     
     // Reset metrics if switching from traditional to HotLabel
     if (!isEnabled) {
@@ -228,33 +257,32 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
       setAdsBlocked(0);
     }
     
-    // Update metrics periodically (simulating user interactions)
-    metricsInterval.current = window.setInterval(() => {
-      // Randomly complete tasks with a more stable algorithm
-      if (Math.random() < 0.3) { // 30% chance each interval
-        setTasksCompleted(prev => prev + 1);
-        setPublisherEarnings(prev => {
-          const increment = 0.04; // Fixed increment for stability
-          return parseFloat((prev + increment).toFixed(2));
-        });
-        
-        // Update user experience score with less variation
-        setUserExperience(prev => {
-          const newValue = Math.min(prev + 0.1, 10.0); // Smaller increment
-          return parseFloat(newValue.toFixed(1));
-        });
-        
-        // Each task blocks approximately 3 ads
-        setAdsBlocked(prev => prev + 3);
+    // We don't need to simulate metrics anymore since we're getting real task completions
+    // We'll just check HotLabel state periodically to keep metrics in sync
+    statsInterval.current = window.setInterval(() => {
+      if (window.HotLabel && window.HotLabel.state) {
+        // Sync completedTasks from SDK state if it's greater than our current count
+        const sdkTaskCount = window.HotLabel.state.completedTasks || 0;
+        if (sdkTaskCount > tasksCompleted) {
+          setTasksCompleted(sdkTaskCount);
+          
+          // Update related metrics
+          setPublisherEarnings(parseFloat((sdkTaskCount * 0.04).toFixed(2)));
+          setAdsBlocked(sdkTaskCount * 3);
+          
+          // Update user experience score (cap at 10)
+          const newScore = Math.min(7.5 + (sdkTaskCount * 0.1), 10.0);
+          setUserExperience(parseFloat(newScore.toFixed(1)));
+        }
       }
-    }, 3000);
+    }, 2000);
   };
 
   const stopMetricsUpdates = () => {
-    if (metricsInterval.current) {
-      window.clearInterval(metricsInterval.current);
-      metricsInterval.current = null;
-      metricsStarted.current = false;
+    if (statsInterval.current) {
+      window.clearInterval(statsInterval.current);
+      statsInterval.current = null;
+      statsStarted.current = false;
     }
   };
 
@@ -273,9 +301,10 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
               checked={isEnabled}
               onCheckedChange={setIsEnabled}
               id="hotlabel-toggle"
+              disabled={isLoading}
             />
             <Label htmlFor="hotlabel-toggle" className="text-sm">
-              Use HotLabel
+              {isLoading ? "Loading..." : "Use HotLabel"}
             </Label>
           </div>
         </div>

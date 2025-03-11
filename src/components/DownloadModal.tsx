@@ -1,39 +1,47 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { FileItem } from "@/utils/fileData";
 import { cn } from "@/lib/utils";
 import { Download, Lock, Shield, CheckCircle, Clock } from "lucide-react";
-
-// Mock task data
-const mockTaskData = {
-  "task_id": "task_12345",
-  "track_id": "track_67890",
-  "language": "en",
-  "category": "vqa",
-  "type": "true-false",
-  "topic": "formula1",
-  "complexity": 1,
-  "content": {
-    "image": {
-      "url": "https://s3-eu-north-1-derc-wmi-crowdlabel-placeholder.s3.eu-north-1.amazonaws.com/TII-VQA_F1_000001.png"
-    }
-  },
-  "task": {
-    "text": "Are any cyan wheel guns visible?",
-    "choices": {
-      "a": "true",
-      "b": "false"
-    }
-  }
-};
 
 interface DownloadModalProps {
   file: FileItem;
   isOpen: boolean;
   onClose: () => void;
   onDownloadConfirm: () => void;
-  hotLabelEnabled: boolean; // Add this prop to know if HotLabel is enabled
+  hotLabelEnabled: boolean; 
   className?: string;
+}
+
+// Define types for task data
+interface TaskContent {
+  image?: {
+    url: string;
+    alt_text?: string;
+  };
+  text?: {
+    text: string;
+  };
+  audio?: {
+    url: string;
+    duration_seconds?: number;
+  };
+}
+
+interface Task {
+  task_id: string;
+  track_id: string;
+  language: string;
+  category: string;
+  type: string;
+  topic: string;
+  complexity: number;
+  content: TaskContent;
+  task: {
+    text: string;
+    choices: Record<string, string>;
+  };
+  status: string;
 }
 
 const DownloadModal: React.FC<DownloadModalProps> = ({
@@ -50,12 +58,16 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
   const [countDown, setCountDown] = useState(5);
   const [showHotLabelTask, setShowHotLabelTask] = useState(false);
   const [hotLabelTaskCompleted, setHotLabelTaskCompleted] = useState(false);
-  const [taskData, setTaskData] = useState<typeof mockTaskData | null>(null);
+  const [taskData, setTaskData] = useState<Task | null>(null);
   const [isLoadingTask, setIsLoadingTask] = useState(false);
+  const [taskError, setTaskError] = useState<string | null>(null);
+  
+  // API endpoint for server
+  const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:8000";
 
+  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      // Reset state when modal closes
       setDownloadProgress(0);
       setIsDownloading(false);
       setIsComplete(false);
@@ -64,20 +76,16 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
       setHotLabelTaskCompleted(false);
       setTaskData(null);
       setIsLoadingTask(false);
+      setTaskError(null);
     }
   }, [isOpen]);
 
+  // Load task data when showing HotLabel task
   useEffect(() => {
-    // Load task data when showing HotLabel task
-    if (showHotLabelTask && !taskData && !isLoadingTask) {
-      setIsLoadingTask(true);
-      // Simulate API fetch with a delay
-      setTimeout(() => {
-        setTaskData(mockTaskData);
-        setIsLoadingTask(false);
-      }, 1000);
+    if (showHotLabelTask && !taskData && !isLoadingTask && !taskError) {
+      fetchTask();
     }
-  }, [showHotLabelTask, taskData, isLoadingTask]);
+  }, [showHotLabelTask, taskData, isLoadingTask, taskError]);
 
   // Simulate download progress
   useEffect(() => {
@@ -107,6 +115,115 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
     return () => clearTimeout(timer);
   }, [isOpen, countDown, hotLabelEnabled]);
 
+  // Fetch a task from the server
+  const fetchTask = useCallback(async () => {
+    setIsLoadingTask(true);
+    setTaskError(null);
+    
+    try {
+      // Prepare user profile data
+      const profile = getUserProfileData();
+      
+      // Generate session ID if not already in local storage
+      const sessionId = localStorage.getItem('hotlabel_session_id') || 
+        `session-${Math.random().toString(36).substring(2, 15)}`;
+      
+      // Store session ID
+      if (!localStorage.getItem('hotlabel_session_id')) {
+        localStorage.setItem('hotlabel_session_id', sessionId);
+      }
+      
+      // Request a task from the server
+      const response = await fetch(`${API_ENDPOINT}/tasks/request?session_id=${sessionId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profile)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
+      const task = await response.json();
+      
+      if (!task || Object.keys(task).length === 0) {
+        // No task available
+        throw new Error("No tasks available");
+      }
+      
+      // Store the task
+      setTaskData(task);
+    } catch (error) {
+      console.error("Error fetching task:", error);
+      setTaskError(error instanceof Error ? error.message : "Failed to load task");
+      
+      // Fall back to mock data if needed
+      setTaskData(getMockTask());
+    } finally {
+      setIsLoadingTask(false);
+    }
+  }, [API_ENDPOINT]);
+  
+  // Get user profile data for task request
+  const getUserProfileData = () => {
+    // Get browser language
+    const language = navigator.language || 'en';
+    const preferredLanguages = navigator.languages || [language];
+    
+    // Get platform and device info
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    
+    // Get current page info
+    const currentSite = window.location.hostname;
+    
+    return {
+      browser_info: {
+        user_agent: userAgent,
+        language: language,
+        preferred_languages: preferredLanguages,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        screen_resolution: `${window.screen.width}x${window.screen.height}`,
+        platform: platform,
+        is_mobile: isMobile
+      },
+      recent_sites: [currentSite],
+      current_site_category: "downloads",
+      current_page_topic: "file-downloads",
+      time_on_page: 60, // Placeholder
+      interaction_depth: 0.5 // Placeholder
+    };
+  };
+  
+  // Get a mock task when server is unavailable
+  const getMockTask = (): Task => {
+    return {
+      task_id: `mock-${Math.random().toString(36).substring(2, 9)}`,
+      track_id: "mock-track",
+      language: "en",
+      category: "vqa",
+      type: "true-false",
+      topic: "formula1",
+      complexity: 1,
+      content: {
+        image: {
+          url: "https://s3-eu-north-1-derc-wmi-crowdlabel-placeholder.s3.eu-north-1.amazonaws.com/TII-VQA_F1_000001.png"
+        }
+      },
+      task: {
+        text: "Are any cyan wheel guns visible?",
+        choices: {
+          "a": "true",
+          "b": "false"
+        }
+      },
+      status: "pending"
+    };
+  };
+
   const startDownload = () => {
     setIsDownloading(true);
     onDownloadConfirm();
@@ -122,13 +239,50 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
     }
   };
 
-  const handleTaskSelection = (choice: string) => {
+  const handleTaskSelection = async (choice: string) => {
+    if (!taskData) return;
+    
     console.log("Task choice selected:", choice);
-    // Simulate task completion
+    
+    // Submit response to server
+    try {
+      const sessionId = localStorage.getItem('hotlabel_session_id') || 
+        `session-${Math.random().toString(36).substring(2, 15)}`;
+      
+      const response = await fetch(`${API_ENDPOINT}/responses/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          task_id: taskData.task_id,
+          session_id: sessionId,
+          response_data: { selected_choice: choice },
+          response_time_ms: 3000, // Approximate time
+          client_metadata: {
+            browser: getBrowserName(),
+            device_type: getDeviceType(),
+            interaction_count: 1
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        console.warn("Response submission had an issue:", response.status);
+        // Continue anyway
+      } else {
+        console.log("Response submitted successfully");
+      }
+    } catch (error) {
+      console.error("Error submitting response:", error);
+      // Continue anyway
+    }
+    
+    // Mark task as completed
     setHotLabelTaskCompleted(true);
     
     // Dispatch a custom event for task completion
-    const taskId = taskData?.task_id || `modal-task-${Date.now()}`;
+    const taskId = taskData.task_id;
     const customEvent = new CustomEvent('hotlabel-task-completed', {
       detail: { 
         adId: `modal-ad-${Date.now()}`, 
@@ -149,6 +303,22 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
         onClose();
       }, 2000);
     }, 1000);
+  };
+  
+  // Helper functions for browser metadata
+  const getBrowserName = () => {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes('Chrome')) return 'Chrome';
+    if (userAgent.includes('Firefox')) return 'Firefox';
+    if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
+    if (userAgent.includes('Edge')) return 'Edge';
+    return 'Unknown';
+  };
+  
+  const getDeviceType = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+      ? 'mobile' 
+      : 'desktop';
   };
 
   if (!isOpen) return null;
@@ -241,10 +411,24 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
               </p>
             </div>
             
-            {isLoadingTask && !taskData ? (
+            {isLoadingTask ? (
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
                 <div className="text-center animate-pulse">
                   <p>Loading AI task...</p>
+                </div>
+              </div>
+            ) : taskError ? (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 min-h-[200px] flex flex-col items-center justify-center">
+                <div className="text-center">
+                  <p className="text-red-500 mb-2">Error loading task</p>
+                  <p className="text-sm text-muted-foreground">{taskError}</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4" 
+                    onClick={fetchTask}
+                  >
+                    Try Again
+                  </Button>
                 </div>
               </div>
             ) : hotLabelTaskCompleted ? (
@@ -268,6 +452,11 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
                       />
                     </div>
                   )}
+                  {taskData.content.text && (
+                    <div className="bg-gray-100 dark:bg-gray-700 rounded-md p-3 mb-4">
+                      <p className="text-sm">{taskData.content.text.text}</p>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex flex-col gap-3 mt-4">
@@ -283,7 +472,20 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
                   ))}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
+                <div className="text-center">
+                  <p>No tasks available</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4" 
+                    onClick={fetchTask}
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            )}
             
             <div className="text-center mt-4">
               <p className="text-xs text-muted-foreground">

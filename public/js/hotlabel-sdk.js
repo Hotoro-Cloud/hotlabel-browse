@@ -13,7 +13,7 @@ class HotLabelSDK {
       adReplacementRate: 1.0,
       theme: 'light',
       taskTypes: ['image', 'text', 'vqa'],
-      apiEndpoint: 'https://api.hotlabel.ai/v1',
+      apiEndpoint: 'http://localhost:8000',
       customTaskRenderer: false
     };
     
@@ -198,6 +198,29 @@ class HotLabelSDK {
         font-size: 14px;
         color: ${this.config.theme === 'dark' ? '#aaa' : '#757575'};
       }
+
+      .hotlabel-loader {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+      }
+
+      .hotlabel-loader::after {
+        content: "";
+        width: 30px;
+        height: 30px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid ${this.config.theme === 'dark' ? '#1565C0' : '#2196F3'};
+        border-radius: 50%;
+        animation: hotlabel-spin 1s linear infinite;
+      }
+
+      @keyframes hotlabel-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     `;
     
     const styleElement = document.createElement('style');
@@ -289,8 +312,8 @@ class HotLabelSDK {
   }
   
   /**
- * Process an ad slot
- */
+   * Process an ad slot
+   */
   processAdSlot(slot) {
     // Skip if already processed
     if (slot.hasAttribute('data-hotlabel-processed')) return;
@@ -311,61 +334,239 @@ class HotLabelSDK {
     }
   }
   
-/**
- * Replace an ad slot with a labeling task
- */
-replaceWithTask(slot) {
-  // Generate a task ID
-  const taskId = this.generateId();
-  
-  // Get a task
-  const task = this.getTask();
-  
-  // Store the task
-  this.state.tasks[taskId] = task;
-  
-  // Get the ad ID from the parent container if available
-  const adId = slot.getAttribute('data-ad-id');
-  
-  // Find the target container
-  let targetContainer;
-  if (this.config.customTaskRenderer) {
-    // If we're using custom rendering mode, we need to find the .p-6 container inside the slot
-    // This is specific to our FileVault implementation
-    targetContainer = slot.querySelector('.p-6') || slot;
-  } else {
-    targetContainer = slot;
+  /**
+   * Replace an ad slot with a labeling task
+   */
+  replaceWithTask(slot) {
+    // Set up the ad ID for tracking
+    const adId = `ad-${this.generateId()}`;
+    slot.setAttribute('data-ad-id', adId);
+    slot.classList.add('hotlabel-container');
+    
+    // Find the target container
+    let targetContainer;
+    if (this.config.customTaskRenderer) {
+      // If we're using custom rendering mode, we need to find the .p-6 container inside the slot
+      // This is specific to our FileVault implementation
+      targetContainer = slot.querySelector('.p-6') || slot;
+    } else {
+      targetContainer = slot;
+    }
+    
+    // Create task container
+    const taskElement = document.createElement('div');
+    taskElement.className = 'hotlabel-task';
+    taskElement.setAttribute('data-loading', 'true');
+    
+    // Clear target container if not using custom renderer
+    if (!this.config.customTaskRenderer) {
+      targetContainer.innerHTML = '';
+    }
+    
+    // Show loading state
+    taskElement.innerHTML = `
+      <div class="hotlabel-header">
+        <div class="hotlabel-logo">HotLabel</div>
+        <div class="hotlabel-close" data-action="close">×</div>
+      </div>
+      <div class="hotlabel-content">
+        <div class="hotlabel-loader"></div>
+      </div>
+    `;
+    
+    // Append to target container
+    targetContainer.appendChild(taskElement);
+    
+    // Add close event listener
+    const closeButton = taskElement.querySelector('[data-action="close"]');
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        this.handleTaskClose(adId);
+      });
+    }
+    
+    // Fetch a task from the server
+    this.fetchTask(taskElement, adId);
+    
+    // Increment task count
+    this.state.taskCount++;
   }
-  
-  // Create task container
-  const taskElement = document.createElement('div');
-  taskElement.className = 'hotlabel-task';
-  taskElement.setAttribute('data-task-id', taskId);
-  
-  // Clear target container
-  if (!this.config.customTaskRenderer) {
-    targetContainer.innerHTML = '';
-  }
-  
-  // Render task content
-  taskElement.innerHTML = this.renderTaskHtml(task, taskId);
-  
-  // Append to target container
-  targetContainer.appendChild(taskElement);
-  
-  // Add event listeners
-  this.setupTaskEventListeners(taskElement, taskId, adId);
-  
-  // Increment task count
-  this.state.taskCount++;
-  
-  this.log('Ad replaced with task', { taskId, task, adId });
-}
   
   /**
-   * Get a task (mock implementation)
+   * Fetch a task from the server
    */
-  getTask() {
+  async fetchTask(taskElement, adId) {
+    try {
+      // Prepare user profile data for request
+      const profile = this.getUserProfileData();
+      
+      // Make request to server
+      const response = await fetch(`${this.config.apiEndpoint}/tasks/request?session_id=${this.state.sessionId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profile)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
+      const taskData = await response.json();
+      
+      if (!taskData) {
+        // No task available
+        this.log('No task available from server');
+        this.renderNoTaskAvailable(taskElement);
+        return;
+      }
+      
+      // Store the task
+      const taskId = taskData.task_id;
+      this.state.tasks[taskId] = taskData;
+      
+      // Render task
+      taskElement.removeAttribute('data-loading');
+      taskElement.setAttribute('data-task-id', taskId);
+      
+      // Render task content
+      this.renderTask(taskElement, taskData, adId);
+      
+      this.log('Task fetched and rendered:', { taskId, adId, taskData });
+    } catch (error) {
+      this.log('Error fetching task:', error);
+      
+      // Fallback to a mock task if server request fails
+      const mockTask = this.getMockTask();
+      const taskId = mockTask.task_id;
+      this.state.tasks[taskId] = mockTask;
+      
+      // Remove loading state
+      taskElement.removeAttribute('data-loading');
+      taskElement.setAttribute('data-task-id', taskId);
+      
+      // Render the mock task with a warning
+      this.renderTask(taskElement, mockTask, adId, true);
+      
+      this.log('Rendered mock task as fallback:', { taskId, adId, mockTask });
+    }
+  }
+  
+  /**
+   * Get user profile data for task request
+   */
+  getUserProfileData() {
+    // Get browser language
+    const language = navigator.language || 'en';
+    const preferredLanguages = navigator.languages || [language];
+    
+    // Get platform and device info
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    
+    // Get current page info
+    const currentSite = window.location.hostname;
+    const currentPath = window.location.pathname;
+    
+    return {
+      browser_info: {
+        user_agent: userAgent,
+        language: language,
+        preferred_languages: preferredLanguages,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        screen_resolution: `${window.screen.width}x${window.screen.height}`,
+        platform: platform,
+        is_mobile: isMobile
+      },
+      recent_sites: [currentSite],
+      current_site_category: this.detectPageCategory(),
+      current_page_topic: this.detectPageTopic(),
+      time_on_page: this.getTimeOnPage(),
+      interaction_depth: this.getScrollDepth(),
+      metadata: {
+        detected_language: language,
+        active_hour: new Date().getHours(),
+        engagement_signals: {
+          scroll_depth: this.getScrollDepth(),
+          click_pattern: 0.7 // Placeholder value
+        }
+      }
+    };
+  }
+  
+  /**
+   * Attempt to detect page category
+   */
+  detectPageCategory() {
+    // Simple detection based on meta tags
+    const metaTags = document.querySelectorAll('meta[name="keywords"], meta[property="article:section"]');
+    if (metaTags.length > 0) {
+      const content = metaTags[0].getAttribute('content');
+      if (content) {
+        const keywords = content.split(',');
+        if (keywords.length > 0) {
+          return keywords[0].trim();
+        }
+      }
+    }
+    
+    // Fallback to domain-based guessing
+    const domain = window.location.hostname;
+    if (domain.includes('news')) return 'news';
+    if (domain.includes('tech')) return 'technology';
+    if (domain.includes('sport')) return 'sports';
+    if (domain.includes('finance')) return 'finance';
+    if (domain.includes('health')) return 'health';
+    
+    return 'general';
+  }
+  
+  /**
+   * Attempt to detect page topic
+   */
+  detectPageTopic() {
+    // Try to get topic from meta description or title
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      const content = metaDescription.getAttribute('content');
+      if (content && content.length > 10) {
+        return content.split(' ').slice(0, 3).join(' ');
+      }
+    }
+    
+    // Fallback to page title
+    return document.title || 'general';
+  }
+  
+  /**
+   * Get time spent on page in seconds
+   */
+  getTimeOnPage() {
+    // This would ideally come from a page load timestamp
+    // For now, return a reasonable default
+    return 60; // 1 minute
+  }
+  
+  /**
+   * Get scroll depth as a percentage
+   */
+  getScrollDepth() {
+    const scrollHeight = document.documentElement.scrollHeight;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const clientHeight = document.documentElement.clientHeight;
+    
+    if (scrollHeight <= clientHeight) return 1.0;
+    
+    const scrolled = scrollTop / (scrollHeight - clientHeight);
+    return Math.min(Math.max(scrolled, 0), 1);
+  }
+  
+  /**
+   * Get a mock task when server is unavailable
+   */
+  getMockTask() {
     const taskTypes = ['image_classification', 'text_classification', 'vqa'];
     const randomType = taskTypes[Math.floor(Math.random() * taskTypes.length)];
     
@@ -374,32 +575,82 @@ replaceWithTask(slot) {
     switch (randomType) {
       case 'image_classification':
         task = {
-          type: 'image_classification',
-          question: 'What object is shown in this image?',
-          imageUrl: 'https://picsum.photos/300/200?random=' + Math.random(), // Random image from Lorem Picsum
-          options: ['Cat', 'Dog', 'Car', 'House'],
-          correctAnswer: null // In real system, this would be used for quality checks
+          task_id: `mock-${this.generateId()}`,
+          track_id: "mock-track",
+          language: "en",
+          category: "image",
+          type: "multiple-choice",
+          topic: "general",
+          complexity: 1,
+          content: {
+            image: {
+              url: 'https://picsum.photos/300/200?random=' + Math.random() // Random image from Lorem Picsum
+            }
+          },
+          task: {
+            text: 'What object is shown in this image?',
+            choices: {
+              a: 'Cat',
+              b: 'Dog',
+              c: 'Car', 
+              d: 'House'
+            }
+          },
+          status: "pending"
         };
         break;
       
       case 'text_classification':
         task = {
-          type: 'text_classification',
-          question: 'What is the sentiment of this text?',
-          text: 'I really enjoyed the service at the restaurant yesterday. The food was delicious and the staff was very friendly.',
-          options: ['Positive', 'Neutral', 'Negative'],
-          correctAnswer: null
+          task_id: `mock-${this.generateId()}`,
+          track_id: "mock-track",
+          language: "en",
+          category: "text",
+          type: "multiple-choice",
+          topic: "sentiment",
+          complexity: 1,
+          content: {
+            text: {
+              text: 'I really enjoyed the service at the restaurant yesterday. The food was delicious and the staff was very friendly.'
+            }
+          },
+          task: {
+            text: 'What is the sentiment of this text?',
+            choices: {
+              a: 'Positive',
+              b: 'Neutral',
+              c: 'Negative'
+            }
+          },
+          status: "pending"
         };
         break;
       
       case 'vqa':
       default:
         task = {
-          type: 'vqa',
-          question: 'How many people are in this image?',
-          imageUrl: 'https://picsum.photos/300/200?people&random=' + Math.random(),
-          options: ['0', '1', '2', '3 or more'],
-          correctAnswer: null
+          task_id: `mock-${this.generateId()}`,
+          track_id: "mock-track",
+          language: "en",
+          category: "vqa",
+          type: "multiple-choice",
+          topic: "general",
+          complexity: 1,
+          content: {
+            image: {
+              url: 'https://picsum.photos/300/200?people&random=' + Math.random()
+            }
+          },
+          task: {
+            text: 'How many people are in this image?',
+            choices: {
+              a: '0',
+              b: '1',
+              c: '2',
+              d: '3 or more'
+            }
+          },
+          status: "pending"
         };
         break;
     }
@@ -408,38 +659,43 @@ replaceWithTask(slot) {
   }
   
   /**
-   * Render HTML for a task
+   * Render a task in the task element
    */
-  renderTaskHtml(task, taskId) {
+  renderTask(taskElement, task, adId, isMockTask = false) {
     let html = `
       <div class="hotlabel-header">
-        <div class="hotlabel-logo">HotLabel</div>
-        <div class="hotlabel-close" data-action="close" data-task-id="${taskId}">×</div>
+        <div class="hotlabel-logo">HotLabel${isMockTask ? ' (Demo)' : ''}</div>
+        <div class="hotlabel-close" data-action="close" data-task-id="${task.task_id}" data-ad-id="${adId}">×</div>
       </div>
       <div class="hotlabel-content">
-        <div class="hotlabel-question">${task.question}</div>
+        <div class="hotlabel-question">${task.task.text}</div>
     `;
     
     // Add task-specific content
-    if (task.type.includes('image')) {
-      html += `
-        <div class="hotlabel-image">
-          <img src="${task.imageUrl}" alt="Task image">
-        </div>
-      `;
-    } else if (task.type === 'text_classification' && task.text) {
-      html += `
-        <div class="hotlabel-text">${task.text}</div>
-      `;
+    if (task.category === 'image' || task.category === 'vqa') {
+      if (task.content.image && task.content.image.url) {
+        html += `
+          <div class="hotlabel-image">
+            <img src="${task.content.image.url}" alt="Task image">
+          </div>
+        `;
+      }
+    } else if (task.category === 'text') {
+      if (task.content.text && task.content.text.text) {
+        html += `
+          <div class="hotlabel-text">${task.content.text.text}</div>
+        `;
+      }
     }
     
     // Add options
     html += `<div class="hotlabel-options">`;
     
-    task.options.forEach((option, index) => {
+    const choices = task.task.choices || {};
+    Object.entries(choices).forEach(([key, value]) => {
       html += `
-        <button class="hotlabel-option" data-action="select-option" data-task-id="${taskId}" data-option-index="${index}">
-          ${option}
+        <button class="hotlabel-option" data-action="select-option" data-task-id="${task.task_id}" data-option-key="${key}" data-ad-id="${adId}">
+          ${value}
         </button>
       `;
     });
@@ -451,7 +707,37 @@ replaceWithTask(slot) {
       </div>
     `;
     
-    return html;
+    // Set the HTML
+    taskElement.innerHTML = html;
+    
+    // Add event listeners
+    this.setupTaskEventListeners(taskElement, task.task_id, adId);
+  }
+  
+  /**
+   * Render a message when no task is available
+   */
+  renderNoTaskAvailable(taskElement) {
+    taskElement.innerHTML = `
+      <div class="hotlabel-header">
+        <div class="hotlabel-logo">HotLabel</div>
+        <div class="hotlabel-close" data-action="close">×</div>
+      </div>
+      <div class="hotlabel-content hotlabel-thank-you">
+        <div class="hotlabel-message">No tasks available right now</div>
+        <div class="hotlabel-submessage">Please check back later</div>
+      </div>
+    `;
+    
+    // Add close button event listener
+    const closeButton = taskElement.querySelector('[data-action="close"]');
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        const container = taskElement.closest('.hotlabel-container');
+        const adId = container?.getAttribute('data-ad-id');
+        this.handleTaskClose(adId);
+      });
+    }
   }
   
   /**
@@ -463,8 +749,8 @@ replaceWithTask(slot) {
     options.forEach(option => {
       option.addEventListener('click', e => {
         const target = e.target;
-        const optionIndex = parseInt(target.getAttribute('data-option-index') || '0');
-        this.handleOptionSelection(taskId, optionIndex, adId);
+        const optionKey = target.getAttribute('data-option-key');
+        this.handleOptionSelection(taskId, optionKey, adId);
       });
     });
     
@@ -472,7 +758,7 @@ replaceWithTask(slot) {
     const closeButton = taskElement.querySelector('[data-action="close"]');
     if (closeButton) {
       closeButton.addEventListener('click', () => {
-        this.handleTaskClose(taskId, adId);
+        this.handleTaskClose(adId);
       });
     }
   }
@@ -480,34 +766,82 @@ replaceWithTask(slot) {
   /**
    * Handle option selection
    */
-  handleOptionSelection(taskId, optionIndex, adId) {
+  async handleOptionSelection(taskId, optionKey, adId) {
     const task = this.state.tasks[taskId];
     if (!task) return;
     
-    const selectedOption = task.options[optionIndex];
+    const selectedOption = task.task.choices[optionKey];
     
-    this.log('Option selected', { taskId, optionIndex, selectedOption });
+    this.log('Option selected', { taskId, optionKey, selectedOption });
     
-    // Record response
+    // Record start time to calculate response time
+    const startTime = performance.now();
+    const endTime = performance.now();
+    const responseTimeMs = Math.round(endTime - startTime);
+    
+    // Prepare response data
     const response = {
-      taskId,
-      userId: this.state.userId,
-      sessionId: this.state.sessionId,
-      publisherId: this.config.publisherId,
-      taskType: task.type,
-      selectedOption,
-      timestamp: new Date().toISOString()
+      task_id: taskId,
+      session_id: this.state.sessionId,
+      response_data: {
+        selected_choice: optionKey
+      },
+      response_time_ms: responseTimeMs,
+      client_metadata: {
+        browser: this.getBrowserName(),
+        device_type: this.getDeviceType(),
+        interaction_count: 1
+      }
     };
     
-    // In a real implementation, send to API
-    this.mockSubmitResponse(response);
+    // Submit response to server
+    try {
+      const apiResponse = await fetch(`${this.config.apiEndpoint}/responses/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(response)
+      });
+      
+      if (!apiResponse.ok) {
+        throw new Error(`Server responded with status: ${apiResponse.status}`);
+      }
+      
+      const responseData = await apiResponse.json();
+      this.log('Response submitted successfully', responseData);
+    } catch (error) {
+      this.log('Error submitting response:', error);
+      // Continue even if submission fails
+    }
     
     // Update UI to show completion
     this.showTaskCompletion(taskId, adId);
     
     // Update state
     this.state.completedTasks++;
-    this.state.earnings += this.getTaskValue(task.type);
+    this.state.earnings += this.getTaskValue(task.category);
+  }
+  
+  /**
+   * Get browser name from user agent
+   */
+  getBrowserName() {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes('Chrome')) return 'Chrome';
+    if (userAgent.includes('Firefox')) return 'Firefox';
+    if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
+    if (userAgent.includes('Edge')) return 'Edge';
+    return 'Unknown';
+  }
+  
+  /**
+   * Get device type (mobile/desktop)
+   */
+  getDeviceType() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+      ? 'mobile' 
+      : 'desktop';
   }
   
   /**
@@ -521,33 +855,7 @@ replaceWithTask(slot) {
     };
     
     // Extract base type from full type string
-    const baseType = taskType.split('_')[0];
-    return baseRates[baseType] || 0.02;
-  }
-  
-  /**
-   * Mock submission to API
-   */
-  mockSubmitResponse(response) {
-    this.log('Response submitted (mock)', response);
-    
-    // In a real implementation, this would be:
-    /*
-    fetch(`${this.config.apiEndpoint}/responses`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(response)
-    })
-    .then(res => res.json())
-    .then(data => {
-      this.log('Response submitted successfully', data);
-    })
-    .catch(err => {
-      console.error('Error submitting response:', err);
-    });
-    */
+    return baseRates[taskType] || 0.02;
   }
   
   /**
@@ -570,17 +878,11 @@ replaceWithTask(slot) {
     `;
     
     // Emit a custom event to notify the container that the task is complete
-    const container = taskElement.closest('.hotlabel-container');
-    if (container) {
-      if (!adId) {
-        adId = container.getAttribute('data-ad-id');
-      }
-      
-      const customEvent = new CustomEvent('hotlabel-task-completed', {
-        detail: { adId, taskId }
-      });
-      document.dispatchEvent(customEvent);
-    }
+    const customEvent = new CustomEvent('hotlabel-task-completed', {
+      detail: { adId, taskId }
+    });
+    document.dispatchEvent(customEvent);
+    this.log('Fired task completion event:', { adId, taskId });
     
     // Fade out and remove after a delay
     setTimeout(() => {
@@ -600,30 +902,35 @@ replaceWithTask(slot) {
   /**
    * Handle task close button
    */
-  handleTaskClose(taskId, adId) {
-    const taskElement = document.querySelector(`.hotlabel-task[data-task-id="${taskId}"]`);
-    if (!taskElement || !taskElement.parentElement) return;
+  handleTaskClose(adId) {
+    if (!adId) return;
     
-    // Get parent
-    const parent = taskElement.parentElement;
+    const container = document.querySelector(`.hotlabel-container[data-ad-id="${adId}"]`);
+    if (!container) return;
     
-    // Restore original content if available
-    if (parent.dataset.originalContent) {
-      parent.innerHTML = parent.dataset.originalContent;
+    const taskElement = container.querySelector('.hotlabel-task');
+    if (!taskElement) return;
+    
+    const taskId = taskElement.getAttribute('data-task-id');
+    
+    // If container has original content, restore it
+    if (container.dataset.originalContent) {
+      container.innerHTML = container.dataset.originalContent;
+      container.removeAttribute('data-hotlabel-processed');
+      container.removeAttribute('data-ad-id');
+      container.classList.remove('hotlabel-container');
     } else {
+      // Otherwise just remove the task element
       taskElement.remove();
     }
     
-    // Emit a close event if we have an adId
-    if (adId || parent.hasAttribute('data-ad-id')) {
-      const closeAdId = adId || parent.getAttribute('data-ad-id');
-      const customEvent = new CustomEvent('hotlabel-task-closed', {
-        detail: { adId: closeAdId, taskId }
-      });
-      document.dispatchEvent(customEvent);
-    }
+    // Emit a close event
+    const customEvent = new CustomEvent('hotlabel-task-closed', {
+      detail: { adId, taskId }
+    });
+    document.dispatchEvent(customEvent);
     
-    this.log('Task closed without completing', { taskId });
+    this.log('Task closed without completing', { adId, taskId });
   }
   
   /**
