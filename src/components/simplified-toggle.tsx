@@ -35,7 +35,6 @@ interface SimplifiedHotLabelToggleProps {
 }
 
 const SimplifiedToggle: React.FC<SimplifiedHotLabelToggleProps> = ({ onChange }) => {
-  const { toast } = useToast();
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [healthCheckPerformed, setHealthCheckPerformed] = useState(false);
@@ -96,19 +95,8 @@ const SimplifiedToggle: React.FC<SimplifiedHotLabelToggleProps> = ({ onChange })
         await initializeHotLabel();
       }
       
-      toast({
-        title: "HotLabel Enabled",
-        description: "You'll now see a single AI task instead of multiple popup ads",
-      });
-      
       return true;
     } catch (error) {
-      toast({
-        title: "HotLabel Error",
-        description: "Failed to initialize HotLabel. Please try again.",
-        variant: "destructive"
-      });
-      
       return false;
     }
   };

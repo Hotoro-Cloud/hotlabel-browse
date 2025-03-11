@@ -193,13 +193,6 @@ const Index = () => {
     if (enabled) {
       // Clear any active ads when HotLabel is enabled
       setActiveAds([]);
-      
-      toast({
-        title: hotLabelEnabled ? "HotLabel Disabled" : "HotLabel Enabled",
-        description: hotLabelEnabled 
-          ? "Switched back to traditional popup ads"
-          : "Now you'll solve one AI task instead of multiple popups",
-      });
     }
   };
 
