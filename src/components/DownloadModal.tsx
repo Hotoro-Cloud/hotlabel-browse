@@ -63,7 +63,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
   const [taskError, setTaskError] = useState<string | null>(null);
   
   // API endpoint for server
-  const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:8000";
+  const API_ENDPOINT = "http://localhost:8000";
 
   // Reset state when modal closes
   useEffect(() => {

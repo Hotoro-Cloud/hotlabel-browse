@@ -49,6 +49,7 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
   const [isLoading, setIsLoading] = useState(false);
   const statsInterval = useRef<number | null>(null);
   const statsStarted = useRef(false);
+  const [healthCheckPerformed, setHealthCheckPerformed] = useState(false);
   
   // Hardcoded API endpoint - change this to match your server location
   const API_ENDPOINT = "http://localhost:8000";
@@ -64,9 +65,21 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
 
   useEffect(() => {
     if (isEnabled) {
+      console.log("Enabling HotLabel...");
       setIsLoading(true);
-      enableHotLabel().finally(() => setIsLoading(false));
+      enableHotLabel()
+        .then(() => {
+          console.log("HotLabel enabled successfully");
+          setIsLoading(false);
+        })
+        .catch(error => {
+          console.error("Failed to enable HotLabel:", error);
+          setIsLoading(false);
+          // Reset the toggle if enabling fails
+          setIsEnabled(false);
+        });
     } else {
+      console.log("Disabling HotLabel...");
       disableHotLabel();
     }
     
@@ -139,6 +152,11 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
     // Stop metrics updates
     stopMetricsUpdates();
     
+    // Reset health check state when disabling
+    // setHealthCheckPerformed(false);
+    // ^ Commented out because it would cause a health check every toggle
+    // Only reset this if you want a fresh health check each time HotLabel is enabled
+    
     if (tasksCompleted > 0) {
       toast({
         title: "HotLabel Disabled",
@@ -149,6 +167,13 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
 
   const loadHotLabelScript = () => {
     return new Promise<void>((resolve, reject) => {
+      // If HotLabel is already loaded, just resolve
+      if (window.HotLabel) {
+        resolve();
+        return;
+      }
+      
+      // Otherwise load the script
       const script = document.createElement("script");
       script.src = "/js/hotlabel-sdk.js";
       script.onload = () => resolve();
@@ -157,6 +182,7 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
     });
   };
 
+    // Update your initializeHotLabel function to be simpler and more reliable
   const initializeHotLabel = async () => {
     return new Promise<void>((resolve, reject) => {
       if (!window.HotLabel) {
@@ -165,6 +191,7 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
       }
       
       try {
+        // Always run init to ensure proper configuration
         window.HotLabel.init({
           publisherId: "demo-publisher",
           adSlotSelector: ".hotlabel-container",
@@ -175,30 +202,32 @@ const HotLabelToggle: React.FC<HotLabelToggleProps> = ({ className, onChange }) 
           customTaskRenderer: true
         });
         
-        // Verify initialization
-        if (!window.HotLabel.state.initialized) {
-          reject(new Error("HotLabel initialization failed"));
-          return;
+        // Only perform health check once per session
+        if (!healthCheckPerformed) {
+          setHealthCheckPerformed(true);
+          
+          // Single health check
+          fetch(`${API_ENDPOINT}/health`)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then(data => {
+              console.log("Server health check:", data);
+              resolve();
+            })
+            .catch(error => {
+              console.warn("Server health check failed:", error);
+              resolve(); // Continue anyway
+            });
+        } else {
+          // If health check was already performed, just resolve
+          resolve();
         }
-        
-        // Test health check to ensure server connection
-        fetch(`${API_ENDPOINT}/health`)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`Server responded with status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then(data => {
-            console.log("Server health check:", data);
-            resolve();
-          })
-          .catch(error => {
-            console.warn("Server health check failed:", error);
-            // Continue anyway with local mode
-            resolve();
-          });
       } catch (error) {
+        console.error("Error initializing HotLabel:", error);
         reject(error);
       }
     });

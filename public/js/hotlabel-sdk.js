@@ -2,7 +2,7 @@
  * HotLabel SDK - Implementation
  * Replaces traditional ads with AI training tasks
  */
-
+if (typeof window.HotLabelSDK === 'undefined') {
 class HotLabelSDK {
   constructor() {
     // Configuration
@@ -948,3 +948,4 @@ const HotLabel = new HotLabelSDK();
 
 // Add to window object
 window.HotLabel = HotLabel;
+}

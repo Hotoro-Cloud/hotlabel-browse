@@ -4,7 +4,8 @@ import FileCard from "@/components/FileCard";
 import PopupAd from "@/components/PopupAd";
 import DownloadModal from "@/components/DownloadModal";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import HotLabelToggle from "@/components/hotlabel-toggle";
+import HotLabelToggle from "@/components/toggle";
+import SimplifiedToggle from "@/components/simplified-toggle";
 import { ArrowDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -207,36 +208,44 @@ const Index = () => {
       <AnimationStyles />
       <AnimatedBackground />
       
-      {/* HotLabelToggle Component */}
-      <HotLabelToggle 
+      <header className={cn(
+  "fixed top-0 left-0 right-0 z-30 transition-all duration-300 py-4",
+  scrolled ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+)}>
+  <div className="container mx-auto px-4 flex items-center justify-between">
+    <div className="flex items-center space-x-2">
+      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold text-lg">F</div>
+      <h1 className="text-xl font-semibold">FileVault</h1>
+    </div>
+    
+    <div className="hidden md:flex items-center space-x-4">
+      
+      
+      
+      <Button variant="ghost">Home</Button>
+      <Button variant="ghost">Browse</Button>
+      <Button variant="ghost">About</Button>
+      <Button variant="default" className="ml-2">Go Premium</Button>
+      {/* Simplified HotLabel Toggle */}
+      <SimplifiedToggle 
+        onChange={handleHotLabelToggle}
+      />
+    </div>
+    
+    {/* For mobile, include the toggle before the menu button */}
+    <div className="flex items-center gap-3 md:hidden">
+      <SimplifiedToggle 
         onChange={handleHotLabelToggle}
       />
       
-      {/* Header */}
-      <header className={cn(
-        "fixed top-0 left-0 right-0 z-30 transition-all duration-300 py-4",
-        scrolled ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm" : "bg-transparent"
-      )}>
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold text-lg">F</div>
-            <h1 className="text-xl font-semibold">FileVault</h1>
-          </div>
-          
-          <div className="hidden md:flex items-center space-x-1">
-            <Button variant="ghost">Home</Button>
-            <Button variant="ghost">Browse</Button>
-            <Button variant="ghost">About</Button>
-            <Button variant="default" className="ml-2">Go Premium</Button>
-          </div>
-          
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </Button>
-        </div>
-      </header>
+      <Button variant="ghost" size="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </Button>
+    </div>
+  </div>
+</header>
       
       <main className="flex-grow pt-24 pb-16">
         {/* Hero Section */}
