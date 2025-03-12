@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AdContent } from "@/utils/fileData";
 import { cn } from "@/lib/utils";
@@ -63,6 +62,7 @@ const PopupAd: React.FC<PopupAdProps> = ({
         isVisible && !isClosing ? "animate-scale-in" : isClosing ? "animate-scale-out" : "",
         className
       )}
+      style={{zIndex: 1000}} // Ensure high z-index
     >
       <div 
         className={cn(
@@ -103,7 +103,8 @@ const PopupAd: React.FC<PopupAdProps> = ({
             
             <Button 
               onClick={() => {
-                window.open(ad.ctaLink, "_blank");
+                // Simulate opening the link - we won't actually navigate
+                console.log(`Would navigate to: ${ad.ctaLink}`);
                 handleClose();
               }}
               className="relative overflow-hidden group/button ml-2"

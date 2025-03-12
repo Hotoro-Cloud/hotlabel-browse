@@ -58,6 +58,10 @@ const Index = () => {
   const [totalAdsToClose, setTotalAdsToClose] = useState(0);
   const [remainingAdsToClose, setRemainingAdsToClose] = useState(0);
   const [downloadReady, setDownloadReady] = useState(false);
+  // Add a flag to track when ads should be shown
+  const [showingAds, setShowingAds] = useState(false);
+  // Add a flag to prevent multiple calls to handleDownloadConfirm
+  const [downloadConfirmCalled, setDownloadConfirmCalled] = useState(false);
 
   // Handle scrolling effects
   useEffect(() => {
@@ -105,7 +109,6 @@ const Index = () => {
       document.removeEventListener('hotlabel-task-completed', handleTaskCompleted as EventListener);
     };
   }, [selectedFile]);
-  
 
   const filteredFiles = searchTerm
     ? fileData.filter(file => 
@@ -123,13 +126,27 @@ const Index = () => {
     setActiveAds([]);
     setRemainingAdsToClose(0);
     setTotalAdsToClose(0);
+    setShowingAds(false);
+    setDownloadConfirmCalled(false);
   };
 
   const handleDownloadConfirm = () => {
+    // Prevent multiple calls
+    if (downloadConfirmCalled) {
+      console.log("Download confirm already called, skipping");
+      return;
+    }
+    
+    setDownloadConfirmCalled(true);
+    console.log("handleDownloadConfirm called, hotLabelEnabled:", hotLabelEnabled);
+    
+    // Set flag that we're showing ads now
+    setShowingAds(true);
+    
     // With the new approach, we don't need to show popup ads when using HotLabel
     // as the task will be directly embedded in the download modal
     if (!hotLabelEnabled) {
-      // Traditional multiple popup ads flow - ENHANCED for more intrusive experience
+      // Define ad positions
       const adPositions: Array<"center" | "top-right" | "bottom-left" | "bottom-right" | "top-left"> = [
         "center", "top-right", "bottom-left", "bottom-right", "top-left"
       ];
@@ -139,75 +156,28 @@ const Index = () => {
       setDownloadReady(false);
       
       // Track how many ads need to be closed
-      const totalAds = 5; // Increased from 3 to 5
+      const totalAds = 3; // Start with 3 ads initially
       setTotalAdsToClose(totalAds);
       setRemainingAdsToClose(totalAds);
       
-      // First ad (fixed position - center)
-      setActiveAds([{ id: `popup-${Date.now()}-1`, position: "center" }]);
+      // Log that we're creating ads
+      console.log("Creating popup ads:", totalAds);
+      
+      // Create unique IDs for each ad to ensure they're distinct
+      const timestamp = Date.now();
+      const newAds = [
+        { id: `popup-${timestamp}-1`, position: adPositions[0] },
+        { id: `popup-${timestamp}-2`, position: adPositions[1] },
+        { id: `popup-${timestamp}-3`, position: adPositions[2] }
+      ];
+      
+      // Set the ads immediately
+      setActiveAds(newAds);
       
       toast({
         title: "Popup ads appearing",
         description: `Close all ${totalAds} ads to continue your download`,
       });
-      
-      // Second and third ads with short delays
-      setTimeout(() => {
-        setActiveAds(prev => [
-          ...prev, 
-          { 
-            id: `popup-${Date.now()}-2`, 
-            position: adPositions[1]
-          }
-        ]);
-      }, 800); // Reduced delay to make them appear more aggressively
-      
-      setTimeout(() => {
-        setActiveAds(prev => [
-          ...prev, 
-          { 
-            id: `popup-${Date.now()}-3`, 
-            position: adPositions[2]
-          }
-        ]);
-      }, 1600);
-      
-      // Fourth and fifth ads with further delays
-      setTimeout(() => {
-        setActiveAds(prev => [
-          ...prev, 
-          { 
-            id: `popup-${Date.now()}-4`, 
-            position: adPositions[3]
-          }
-        ]);
-      }, 2500);
-      
-      setTimeout(() => {
-        setActiveAds(prev => [
-          ...prev, 
-          { 
-            id: `popup-${Date.now()}-5`, 
-            position: adPositions[4]
-          }
-        ]);
-        
-        // After all ads have been displayed, show an additional "Follow-up" ad
-        // that appears if the user tries to close some of the initial ads
-        setTimeout(() => {
-          if (activeAds.length > 0) {
-            setActiveAds(prev => [
-              ...prev,
-              {
-                id: `popup-${Date.now()}-followup`,
-                position: "center" // Place in center to be most disruptive
-              }
-            ]);
-            setTotalAdsToClose(prev => prev + 1);
-            setRemainingAdsToClose(prev => prev + 1);
-          }
-        }, 5000);
-      }, 3500);
     }
   };
 
@@ -242,15 +212,24 @@ const Index = () => {
     
     // Clear any active ads when closing
     setActiveAds([]);
+    setShowingAds(false);
+    setDownloadConfirmCalled(false);
   };
 
   const handleCloseAd = (adId: string) => {
+    console.log("Closing ad:", adId);
+    
     // Remove the ad from active ads
-    setActiveAds(prev => prev.filter(ad => ad.id !== adId));
+    setActiveAds(prev => {
+      const newAds = prev.filter(ad => ad.id !== adId);
+      console.log("Updated ads after closing:", newAds);
+      return newAds;
+    });
     
     // Decrement remaining ads counter
     setRemainingAdsToClose(prev => {
       const newValue = prev - 1;
+      console.log("Remaining ads to close:", newValue);
       
       // Check if all ads are closed
       if (newValue <= 0) {
@@ -280,6 +259,8 @@ const Index = () => {
     if (enabled) {
       // Clear any active ads when HotLabel is enabled
       setActiveAds([]);
+      setShowingAds(false);
+      setDownloadConfirmCalled(false);
     }
   };
 
@@ -428,15 +409,20 @@ const Index = () => {
       />
     )}
       
-      {/* Popup Ads - Only show when HotLabel is disabled */}
-      {!hotLabelEnabled && activeAds.map((ad, index) => (
+      {/* Debug info */}
+      <div className="fixed bottom-4 left-4 bg-black/40 text-white text-xs p-2 rounded z-50">
+        Active Ads: {activeAds.length} | Showing: {showingAds ? 'Yes' : 'No'} | HotLabel: {hotLabelEnabled ? 'Yes' : 'No'}
+      </div>
+      
+      {/* Popup Ads - Only show when HotLabel is disabled AND showingAds is true */}
+      {!hotLabelEnabled && showingAds && activeAds.map((ad, index) => (
         <PopupAd
           key={ad.id}
           ad={adData[index % adData.length]}
           onClose={() => handleCloseAd(ad.id)}
           position={ad.position}
           delay={index * 200}
-          className="popup-ad"
+          className="popup-ad fixed"
         />
       ))}
     </div>

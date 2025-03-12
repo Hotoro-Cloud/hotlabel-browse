@@ -65,6 +65,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
   const [taskData, setTaskData] = useState<Task | null>(null);
   const [isLoadingTask, setIsLoadingTask] = useState(false);
   const [taskError, setTaskError] = useState<string | null>(null);
+  const [countdownComplete, setCountdownComplete] = useState(false);
   
   // API endpoint for server
   const API_ENDPOINT = "http://localhost:8000";
@@ -81,6 +82,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
       setTaskData(null);
       setIsLoadingTask(false);
       setTaskError(null);
+      setCountdownComplete(false);
     }
   }, [isOpen]);
 
@@ -90,6 +92,13 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
       fetchTask();
     }
   }, [showHotLabelTask, taskData, isLoadingTask, taskError]);
+
+  // Trigger file download when progress reaches 100%
+  useEffect(() => {
+    if (downloadProgress >= 100 && isDownloading) {
+      triggerFileDownload();
+    }
+  }, [downloadProgress, isDownloading, file]);
 
   // Simulate download progress
   useEffect(() => {
@@ -105,7 +114,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
         }
       }, 500);
     }
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [isDownloading, downloadProgress]);
 
   // Handle countdown for traditional download
@@ -116,17 +125,20 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
         setCountDown(countDown - 1);
       }, 1000);
 
-      return () => clearTimeout(timer);
+      return () => window.clearTimeout(timer);
+    } else if (isOpen && countDown === 0 && !hotLabelEnabled && !countdownComplete) {
+      // Set countdown as complete
+      setCountdownComplete(true);
     }
-  }, [isOpen, countDown, hotLabelEnabled]);
+  }, [isOpen, countDown, hotLabelEnabled, countdownComplete]);
 
   // Trigger download confirm when countdown reaches zero
   useEffect(() => {
-    if (countDown === 0 && !hotLabelEnabled && !downloadReady && !isDownloading) {
+    if (countdownComplete && !hotLabelEnabled && !downloadReady && !isDownloading) {
       // Call onDownloadConfirm to start showing ads
       onDownloadConfirm();
     }
-  }, [countDown, hotLabelEnabled, downloadReady, isDownloading, onDownloadConfirm]);
+  }, [countdownComplete, hotLabelEnabled, downloadReady, isDownloading, onDownloadConfirm]);
 
   // Fetch a task from the server
   const fetchTask = useCallback(async () => {
@@ -237,11 +249,46 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
     };
   };
 
+  // Trigger the actual file download
+  const triggerFileDownload = () => {
+    if (!file) return;
+    
+    console.log("Triggering file download for:", file.name);
+    
+    // Create a mock file blob
+    const mockFileContent = `This is a mock content for ${file.name}. In a real implementation, this would be the actual file content.`;
+    const blob = new Blob([mockFileContent], { type: 'text/plain' });
+    
+    // Create a download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    
+    // Trigger the download
+    link.click();
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    
+    // Show success toast
+    toast({
+      title: "Download successful!",
+      description: `${file.name} has been downloaded.`
+    });
+  };
+
   const startDownload = () => {
     // Only start download if allowed
     if (hotLabelEnabled || downloadReady) {
       setIsDownloading(true);
-      onDownloadConfirm();
+      
+      // If we're using HotLabel and the task is completed, we don't need to call onDownloadConfirm again
+      if (!hotLabelEnabled || !hotLabelTaskCompleted) {
+        onDownloadConfirm();
+      }
     } else {
       // If trying to download without closing ads, show a reminder
       toast({
@@ -257,12 +304,24 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
       // Show HotLabel task instead of starting download
       setShowHotLabelTask(true);
     } else if (!hotLabelEnabled && !downloadReady) {
-      // Remind user to close all ads first
-      toast({
-        title: "Close all ads first",
-        description: "You need to close all popup ads before downloading.",
-        variant: "destructive"
-      });
+      // Make sure the countdown is complete before showing the reminder
+      if (countdownComplete) {
+        // Remind user to close all ads first
+        toast({
+          title: "Close all ads first",
+          description: "You need to close all popup ads before downloading.",
+          variant: "destructive"
+        });
+        
+        // Re-trigger onDownloadConfirm to ensure ads are displayed
+        onDownloadConfirm();
+      } else {
+        // If countdown is still going, wait for it to complete
+        toast({
+          title: "Please wait",
+          description: `Countdown in progress: ${countDown}s remaining.`,
+        });
+      }
     } else {
       // Traditional download flow - only if ads are closed
       startDownload();
@@ -410,32 +469,32 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
                 </Button>
                 
                 <Button 
-  className="flex-1 relative overflow-hidden" 
-  onClick={handleDownloadClick}
-  // Only enable when using HotLabel OR all traditional ads are closed
-  disabled={!hotLabelEnabled && !downloadReady}
->
-  {!hotLabelEnabled && !downloadReady ? (
-    <div className="flex items-center">
-      {countDown > 0 ? (
-        <>
-          <Clock className="w-4 h-4 mr-2 animate-pulse" />
-          <span>Wait {countDown}s</span>
-        </>
-      ) : (
-        <>
-          <Lock className="w-4 h-4 mr-2" />
-          <span>Close All Ads First</span>
-        </>
-      )}
-    </div>
-  ) : (
-    <div className="flex items-center">
-      <Download className="w-4 h-4 mr-2" />
-      <span>{hotLabelEnabled ? "Continue" : "Download"}</span>
-    </div>
-  )}
-</Button>
+                  className="flex-1 relative overflow-hidden" 
+                  onClick={handleDownloadClick}
+                  // Only enable when using HotLabel OR all traditional ads are closed
+                  disabled={!hotLabelEnabled && !downloadReady}
+                >
+                  {!hotLabelEnabled && !downloadReady ? (
+                    <div className="flex items-center">
+                      {countDown > 0 ? (
+                        <>
+                          <Clock className="w-4 h-4 mr-2 animate-pulse" />
+                          <span>Wait {countDown}s</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-4 h-4 mr-2" />
+                          <span>Close All Ads First</span>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <Download className="w-4 h-4 mr-2" />
+                      <span>{hotLabelEnabled ? "Continue" : "Download"}</span>
+                    </div>
+                  )}
+                </Button>
               </div>
             </div>
           </>
