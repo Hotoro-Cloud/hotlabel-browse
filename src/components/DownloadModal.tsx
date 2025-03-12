@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileItem } from "@/utils/fileData";
 import { cn } from "@/lib/utils";
 import { Download, Lock, Shield, CheckCircle, Clock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DownloadModalProps {
   file: FileItem;
@@ -54,6 +55,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
   downloadReady,
   className,
 }) => {
+  const { toast } = useToast();
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -113,9 +115,18 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
       timer = window.setTimeout(() => {
         setCountDown(countDown - 1);
       }, 1000);
+
+      return () => clearTimeout(timer);
     }
-    return () => clearTimeout(timer);
   }, [isOpen, countDown, hotLabelEnabled]);
+
+  // Trigger download confirm when countdown reaches zero
+  useEffect(() => {
+    if (countDown === 0 && !hotLabelEnabled && !downloadReady && !isDownloading) {
+      // Call onDownloadConfirm to start showing ads
+      onDownloadConfirm();
+    }
+  }, [countDown, hotLabelEnabled, downloadReady, isDownloading, onDownloadConfirm]);
 
   // Fetch a task from the server
   const fetchTask = useCallback(async () => {
@@ -227,16 +238,33 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
   };
 
   const startDownload = () => {
-    setIsDownloading(true);
-    onDownloadConfirm();
+    // Only start download if allowed
+    if (hotLabelEnabled || downloadReady) {
+      setIsDownloading(true);
+      onDownloadConfirm();
+    } else {
+      // If trying to download without closing ads, show a reminder
+      toast({
+        title: "Close all ads first",
+        description: "You need to close all popup ads before downloading.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDownloadClick = () => {
     if (hotLabelEnabled && !hotLabelTaskCompleted) {
       // Show HotLabel task instead of starting download
       setShowHotLabelTask(true);
+    } else if (!hotLabelEnabled && !downloadReady) {
+      // Remind user to close all ads first
+      toast({
+        title: "Close all ads first",
+        description: "You need to close all popup ads before downloading.",
+        variant: "destructive"
+      });
     } else {
-      // Traditional download flow
+      // Traditional download flow - only if ads are closed
       startDownload();
     }
   };
@@ -382,32 +410,32 @@ const DownloadModal: React.FC<DownloadModalProps> = ({
                 </Button>
                 
                 <Button 
-                  className="flex-1 relative overflow-hidden" 
-                  onClick={handleDownloadClick}
-                  // Only enable when using HotLabel OR all traditional ads are closed
-                  disabled={!hotLabelEnabled && !downloadReady && countDown > 0}
-                >
-                  {!hotLabelEnabled && !downloadReady ? (
-                    <div className="flex items-center">
-                      {countDown > 0 ? (
-                        <>
-                          <Clock className="w-4 h-4 mr-2 animate-pulse" />
-                          <span>Wait {countDown}s</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-4 h-4 mr-2" />
-                          <span>Close All Ads First</span>
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <Download className="w-4 h-4 mr-2" />
-                      <span>{hotLabelEnabled ? "Continue" : "Download"}</span>
-                    </div>
-                  )}
-                </Button>
+  className="flex-1 relative overflow-hidden" 
+  onClick={handleDownloadClick}
+  // Only enable when using HotLabel OR all traditional ads are closed
+  disabled={!hotLabelEnabled && !downloadReady}
+>
+  {!hotLabelEnabled && !downloadReady ? (
+    <div className="flex items-center">
+      {countDown > 0 ? (
+        <>
+          <Clock className="w-4 h-4 mr-2 animate-pulse" />
+          <span>Wait {countDown}s</span>
+        </>
+      ) : (
+        <>
+          <Lock className="w-4 h-4 mr-2" />
+          <span>Close All Ads First</span>
+        </>
+      )}
+    </div>
+  ) : (
+    <div className="flex items-center">
+      <Download className="w-4 h-4 mr-2" />
+      <span>{hotLabelEnabled ? "Continue" : "Download"}</span>
+    </div>
+  )}
+</Button>
               </div>
             </div>
           </>

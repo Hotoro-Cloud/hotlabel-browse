@@ -4,7 +4,6 @@ import FileCard from "@/components/FileCard";
 import PopupAd from "@/components/PopupAd";
 import DownloadModal from "@/components/DownloadModal";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import HotLabelToggle from "@/components/toggle";
 import SimplifiedToggle from "@/components/simplified-toggle";
 import { ArrowDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -118,6 +117,12 @@ const Index = () => {
   const handleDownloadClick = (file: FileItem) => {
     setSelectedFile(file);
     setIsDownloadModalOpen(true);
+    
+    // Reset download state
+    setDownloadReady(false);
+    setActiveAds([]);
+    setRemainingAdsToClose(0);
+    setTotalAdsToClose(0);
   };
 
   const handleDownloadConfirm = () => {
@@ -129,16 +134,21 @@ const Index = () => {
         "center", "top-right", "bottom-left", "bottom-right", "top-left"
       ];
       
+      // First clear any existing ads and reset counters
+      setActiveAds([]);
+      setDownloadReady(false);
+      
       // Track how many ads need to be closed
-      setTotalAdsToClose(5); // Increased from 3 to 5
-      setRemainingAdsToClose(5);
+      const totalAds = 5; // Increased from 3 to 5
+      setTotalAdsToClose(totalAds);
+      setRemainingAdsToClose(totalAds);
       
       // First ad (fixed position - center)
       setActiveAds([{ id: `popup-${Date.now()}-1`, position: "center" }]);
       
       toast({
         title: "Popup ads appearing",
-        description: "Close all 5 ads to continue your download",
+        description: `Close all ${totalAds} ads to continue your download`,
       });
       
       // Second and third ads with short delays
@@ -204,23 +214,34 @@ const Index = () => {
   // Simulate immediate download when all tasks/ads are closed
   const simulateDownload = () => {
     if (selectedFile) {
-      const mockFileObjectUrl = URL.createObjectURL(new Blob(['mock content'], { type: 'text/plain' }));
-      const link = document.createElement('a');
-      link.href = mockFileObjectUrl;
-      link.download = selectedFile.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Download successful!",
-        description: `${selectedFile.name} has been downloaded.`,
-      });
+      // Create a small delay to make the download feel more realistic
+      setTimeout(() => {
+        const mockFileObjectUrl = URL.createObjectURL(new Blob(['mock content'], { type: 'text/plain' }));
+        const link = document.createElement('a');
+        link.href = mockFileObjectUrl;
+        link.download = selectedFile.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Download successful!",
+          description: `${selectedFile.name} has been downloaded.`,
+        });
+        
+        // Close the modal after a successful download
+        setTimeout(() => {
+          setIsDownloadModalOpen(false);
+        }, 1500);
+      }, 800);
     }
   };
 
   const handleCloseDownloadModal = () => {
     setIsDownloadModalOpen(false);
+    
+    // Clear any active ads when closing
+    setActiveAds([]);
   };
 
   const handleCloseAd = (adId: string) => {
@@ -228,24 +249,28 @@ const Index = () => {
     setActiveAds(prev => prev.filter(ad => ad.id !== adId));
     
     // Decrement remaining ads counter
-    setRemainingAdsToClose(prev => prev - 1);
-    
-    // Check if all ads are closed
-    if (remainingAdsToClose <= 1) { // Using 1 because state hasn't updated yet
-      // Enable download button
-      setDownloadReady(true);
+    setRemainingAdsToClose(prev => {
+      const newValue = prev - 1;
       
-      toast({
-        title: "Download Ready",
-        description: "You can now download your file.",
-      });
-    } else {
-      // Show toast with remaining ads count
-      toast({
-        title: "Ad Closed",
-        description: `${remainingAdsToClose - 1} more ad${remainingAdsToClose - 1 > 1 ? 's' : ''} to close before download.`,
-      });
-    }
+      // Check if all ads are closed
+      if (newValue <= 0) {
+        // Enable download button
+        setDownloadReady(true);
+        
+        toast({
+          title: "Download Ready",
+          description: "You can now download your file.",
+        });
+      } else {
+        // Show toast with remaining ads count
+        toast({
+          title: "Ad Closed",
+          description: `${newValue} more ad${newValue > 1 ? 's' : ''} to close before download.`,
+        });
+      }
+      
+      return newValue;
+    });
   };
 
   // Handle HotLabel toggle state changes
@@ -264,43 +289,40 @@ const Index = () => {
       <AnimatedBackground />
       
       <header className={cn(
-  "fixed top-0 left-0 right-0 z-30 transition-all duration-300 py-4",
-  scrolled ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm" : "bg-transparent"
-)}>
-  <div className="container mx-auto px-4 flex items-center justify-between">
-    <div className="flex items-center space-x-2">
-      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold text-lg">F</div>
-      <h1 className="text-xl font-semibold">FileVault</h1>
-    </div>
-    
-    <div className="hidden md:flex items-center space-x-4">
-      
-      
-      
-      <Button variant="ghost">Home</Button>
-      <Button variant="ghost">Browse</Button>
-      <Button variant="ghost">About</Button>
-      <Button variant="default" className="ml-2">Go Premium</Button>
-      {/* Simplified HotLabel Toggle */}
-      <SimplifiedToggle 
-        onChange={handleHotLabelToggle}
-      />
-    </div>
-    
-    {/* For mobile, include the toggle before the menu button */}
-    <div className="flex items-center gap-3 md:hidden">
-      <SimplifiedToggle 
-        onChange={handleHotLabelToggle}
-      />
-      
-      <Button variant="ghost" size="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </Button>
-    </div>
-  </div>
-</header>
+        "fixed top-0 left-0 right-0 z-30 transition-all duration-300 py-4",
+        scrolled ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+      )}>
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold text-lg">F</div>
+            <h1 className="text-xl font-semibold">FileVault</h1>
+          </div>
+          
+          <div className="hidden md:flex items-center space-x-4">
+            <Button variant="ghost">Home</Button>
+            <Button variant="ghost">Browse</Button>
+            <Button variant="ghost">About</Button>
+            <Button variant="default" className="ml-2">Go Premium</Button>
+            {/* Simplified HotLabel Toggle */}
+            <SimplifiedToggle 
+              onChange={handleHotLabelToggle}
+            />
+          </div>
+          
+          {/* For mobile, include the toggle before the menu button */}
+          <div className="flex items-center gap-3 md:hidden">
+            <SimplifiedToggle 
+              onChange={handleHotLabelToggle}
+            />
+            
+            <Button variant="ghost" size="icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+      </header>
       
       <main className="flex-grow pt-24 pb-16">
         {/* Hero Section */}
@@ -402,7 +424,7 @@ const Index = () => {
         onClose={handleCloseDownloadModal}
         onDownloadConfirm={handleDownloadConfirm}
         hotLabelEnabled={hotLabelEnabled}
-        downloadReady={downloadReady} // Add this prop
+        downloadReady={downloadReady}
       />
     )}
       
