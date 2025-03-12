@@ -155,8 +155,8 @@ const Index = () => {
       setActiveAds([]);
       setDownloadReady(false);
       
-      // Track how many ads need to be closed
-      const totalAds = 3; // Start with 3 ads initially
+      // Track how many ads need to be closed - Increased to 10
+      const totalAds = 10; // Changed from 3 to 10 ads
       setTotalAdsToClose(totalAds);
       setRemainingAdsToClose(totalAds);
       
@@ -165,11 +165,14 @@ const Index = () => {
       
       // Create unique IDs for each ad to ensure they're distinct
       const timestamp = Date.now();
-      const newAds = [
-        { id: `popup-${timestamp}-1`, position: adPositions[0] },
-        { id: `popup-${timestamp}-2`, position: adPositions[1] },
-        { id: `popup-${timestamp}-3`, position: adPositions[2] }
-      ];
+      
+      // Create 10 ads with various positions
+      const newAds = [];
+      for (let i = 0; i < totalAds; i++) {
+        // Cycle through positions for variety (using modulo)
+        const position = adPositions[i % adPositions.length];
+        newAds.push({ id: `popup-${timestamp}-${i+1}`, position });
+      }
       
       // Set the ads immediately
       setActiveAds(newAds);
