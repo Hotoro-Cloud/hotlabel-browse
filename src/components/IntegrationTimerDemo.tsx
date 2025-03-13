@@ -1,4 +1,156 @@
-import React, { useState, useEffect, useRef } from "react";
+<div className="flex gap-2 text-xs mb-3">
+                <Badge variant={!hotlabelReady ? "default" : "outline"}>
+                  Traditional Ads
+                </Badge>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                <Badge variant={hotlabelReady ? "default" : "outline"}>
+                  HotLabel Tasks
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-hidden">
+              {viewMode === "rendered" ? (
+                <div className="w-full h-full p-2">
+                  <iframe
+                    className="w-full h-full border rounded-md"
+                    srcDoc={hotlabelReady ? websiteAfterHtml : websiteBeforeHtml}
+                    title="Website Preview"
+                    sandbox="allow-scripts"
+                  />
+                </div>
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-900/20 p-4 h-full overflow-auto">
+                  <pre className="p-4 text-xs whitespace-pre-wrap bg-white dark:bg-gray-800 rounded-md">
+                    <code>{hotlabelReady ? websiteAfterHtml : websiteBeforeHtml}</code>
+                  </pre>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
+      
+      {/* Results section - only show after completion */}
+      {completedSteps.length === integrationSteps.length && (
+        <Card className="mt-8 bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-900">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                <CheckCircle className="h-6 w-6 text-green-500" />
+              </div>
+              <h3 className="text-xl font-semibold">Integration Complete!</h3>
+            </div>
+            
+            <p className="mb-6">
+              You've successfully replaced traditional ads with HotLabel in just {formatTime(totalTime - timeRemaining)}! 
+              Your website is now ready to generate more revenue while providing a better user experience.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Revenue Increase</h4>
+                <div className="text-2xl font-bold text-green-500">+1,150%</div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Integration Time</h4>
+                <div className="text-2xl font-bold">{formatTime(totalTime - timeRemaining)}</div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Code Changes</h4>
+                <div className="text-2xl font-bold">5 lines</div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">User Experience</h4>
+                <div className="text-2xl font-bold text-green-500">+270%</div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default SimplifiedIntegrationDemo;              <div className="flex gap-2 text-xs mb-3">
+                <Badge variant={!hotlabelReady ? "default" : "outline"}>
+                  Traditional Ads
+                </Badge>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                <Badge variant={hotlabelReady ? "default" : "outline"}>
+                  HotLabel Tasks
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-hidden">
+              {viewMode === "rendered" ? (
+                <iframe
+                  ref={iframeRef}
+                  className="w-full h-full border-none"
+                  srcDoc={hotlabelReady ? websiteAfterHtml : websiteBeforeHtml}
+                  title="Website Preview"
+                />
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-900/20 p-4 h-full overflow-auto">
+                  <pre className="p-4 text-xs whitespace-pre-wrap bg-white dark:bg-gray-800 rounded-md">
+                    <code>{hotlabelReady ? websiteAfterHtml : websiteBeforeHtml}</code>
+                  </pre>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
+      
+      {/* Results section - only show after completion */}
+      {completedSteps.length === integrationSteps.length && (
+        <Card className="mt-8 bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-900">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                <CheckCircle className="h-6 w-6 text-green-500" />
+              </div>
+              <h3 className="text-xl font-semibold">Integration Complete!</h3>
+            </div>
+            
+            <p className="mb-6">
+              You've successfully replaced traditional ads with HotLabel in just {formatTime(totalTime - timeRemaining)}! 
+              Your website is now ready to generate more revenue while providing a better user experience.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Revenue Increase</h4>
+                <div className="text-2xl font-bold text-green-500">+1,150%</div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Integration Time</h4>
+                <div className="text-2xl font-bold">{formatTime(totalTime - timeRemaining)}</div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Code Changes</h4>
+                <div className="text-2xl font-bold">5 lines</div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">User Experience</h4>
+                <div className="text-2xl font-bold text-green-500">+270%</div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default SimplifiedIntegrationDemo;import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -6,169 +158,93 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Circle, CheckCircle, Clock, ArrowRight } from "lucide-react";
 
-const IntegrationTimerDemo = () => {
+const SimplifiedIntegrationDemo = () => {
   // Timer state
   const [isRunning, setIsRunning] = useState(false);
-  const [totalTime, setTotalTime] = useState(300); // 5 minutes in seconds
-  const [timeRemaining, setTimeRemaining] = useState(300);
+  const [totalTime, setTotalTime] = useState(120); // 2 minutes in seconds
+  const [timeRemaining, setTimeRemaining] = useState(120);
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Website view state
   const [currentTab, setCurrentTab] = useState("before");
-  const [adsReady, setAdsReady] = useState(true);
   const [hotlabelReady, setHotlabelReady] = useState(false);
   
-  // Integration steps
+  // State for visual mockup of website
+  const [showRenderedPreview, setShowRenderedPreview] = useState(true);
+  
+  // Integration steps - simplified to just 2 key steps
   const integrationSteps = [
     {
-      name: "Remove Ad Network SDK",
-      time: 45, // seconds
-      code: `<!-- Remove this -->
-<script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
-<script>
-  window.googletag = window.googletag || {cmd: []};
-  googletag.cmd.push(function() {
-    googletag.defineSlot('/22639388115/aec_ed', [[300, 250]], 'div-gpt-ad-1').addService(googletag.pubads());
-    googletag.pubads().enableSingleRequest();
-    googletag.enableServices();
-  });
-</script>`
-    },
-    {
       name: "Add HotLabel SDK",
-      time: 45,
-      code: `<!-- Add this instead -->
+      time: 60,
+      code: `<!-- Add HotLabel SDK to your website header -->
 <script src="https://cdn.hotlabel.ai/sdk/v1/hotlabel.min.js"></script>
 <script>
   window.HotLabel.init({
     publisherId: "your-publisher-id",
-    adSlotSelector: ".ad-container",
+    adSlotSelector: ".hotlabel-container",
     apiEndpoint: "https://api.hotlabel.ai/v1",
     theme: "light" // or "dark"
   });
 </script>`
     },
     {
-      name: "Update Ad Containers",
+      name: "Create Modal Trigger",
       time: 60,
-      code: `<!-- Keep your existing ad containers, just add the class -->
-<div id="div-gpt-ad-1" class="ad-container">
-  <!-- HotLabel will automatically replace ads here -->
-</div>`
-    },
-    {
-      name: "Test Integration",
-      time: 60,
-      code: `// No additional code needed!
-// HotLabel automatically detects and replaces ads
-// in containers with the specified class.
+      code: `<!-- Add this button to trigger a download with HotLabel task -->
+<button 
+  id="download-button"
+  class="hotlabel-container"
+  data-action="download"
+  data-file="example.pdf"
+>
+  Download File
+</button>
 
-// Optional: Add event listeners for analytics
-document.addEventListener('hotlabel-task-completed', function(e) {
-  console.log('Task completed:', e.detail);
-  // Track completion in your analytics
-});`
-    },
-    {
-      name: "Integration Complete!",
-      time: 30,
-      code: `// 🎉 Congratulations! 🎉
-// You've successfully integrated HotLabel!
-
-// Your website is now:
-// ✓ Generating 10-15x more revenue
-// ✓ Providing a better user experience
-// ✓ Contributing to AI advancement
-// ✓ Free from annoying popup ads`
+<!-- The SDK will automatically handle the rest! -->
+<!-- It will display an AI task before allowing the download -->
+`
     }
   ];
   
-  // Before and after website HTML
+  // Before and after website HTML - simplified
   const websiteBeforeHtml = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TechNews Daily</title>
-  
-  <!-- Ad Network SDK -->
-  <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
-  <script>
-    window.googletag = window.googletag || {cmd: []};
-    googletag.cmd.push(function() {
-      googletag.defineSlot('/22639388115/aec_ed', [[300, 250]], 'div-gpt-ad-1').addService(googletag.pubads());
-      googletag.defineSlot('/22639388115/aec_ed', [[300, 250]], 'div-gpt-ad-2').addService(googletag.pubads());
-      googletag.pubads().enableSingleRequest();
-      googletag.enableServices();
-    });
-  </script>
+  <title>File Downloads - Your Website</title>
   
   <style>
     body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-    header { display: flex; justify-content: space-between; align-items: center; }
-    .main-content { display: grid; grid-template-columns: 1fr 300px; gap: 20px; margin-top: 20px; }
-    .content { border: 1px solid #eee; padding: 20px; }
-    .sidebar { display: flex; flex-direction: column; gap: 20px; }
-    .ad-box { width: 300px; height: 250px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
-    .article-footer { margin-top: 20px; }
+    .download-button { 
+      background: #2196F3; 
+      color: white; 
+      padding: 12px 24px; 
+      border-radius: 4px; 
+      border: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>TechNews Daily</h1>
-    <nav>
-      <a href="#">Home</a> | 
-      <a href="#">Technology</a> | 
-      <a href="#">Business</a> | 
-      <a href="#">Science</a>
-    </nav>
+    <h1>File Downloads</h1>
   </header>
   
-  <div class="main-content">
-    <div class="content">
-      <h2>Latest AI Advancements Revolutionize Healthcare</h2>
-      <p>New breakthrough in artificial intelligence is changing how doctors diagnose rare diseases...</p>
-      <p>Researchers at leading universities have developed algorithms that can detect patterns in medical imaging that human doctors might miss...</p>
+  <main>
+    <div class="file-card">
+      <h2>Example Report.pdf</h2>
+      <p>A sample PDF file for demonstration</p>
       
-      <!-- In-article ad -->
-      <div id="div-gpt-ad-1" class="ad-box">
-        <!-- Ad will be inserted here by the ad network -->
-        Traditional Ad - Low Revenue, Poor UX
-      </div>
-      
-      <p>The technology is already being deployed in several major hospitals across the country...</p>
-      <p>Patient outcomes have improved by an estimated 23% in early trials...</p>
-      
-      <div class="article-footer">
-        <h3>Related Articles</h3>
-        <ul>
-          <li>Machine Learning Models Predict Drug Interactions</li>
-          <li>Virtual Reality Used in Surgical Training</li>
-          <li>New Mobile App Helps Patients Manage Chronic Conditions</li>
-        </ul>
-      </div>
+      <button class="download-button">
+        Download File
+      </button>
     </div>
-    
-    <div class="sidebar">
-      <!-- Sidebar ad -->
-      <div id="div-gpt-ad-2" class="ad-box">
-        <!-- Ad will be inserted here by the ad network -->
-        Traditional Ad - Low Revenue, Poor UX
-      </div>
-      
-      <div class="popular-posts">
-        <h3>Popular Posts</h3>
-        <ul>
-          <li>Top 10 Tech Trends for 2025</li>
-          <li>Review: New Quantum Computing Breakthrough</li>
-          <li>How Blockchain is Transforming Supply Chains</li>
-        </ul>
-      </div>
-    </div>
-  </div>
+  </main>
 </body>
 </html>
   `;
@@ -179,14 +255,14 @@ document.addEventListener('hotlabel-task-completed', function(e) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TechNews Daily</title>
+  <title>File Downloads - Your Website</title>
   
-  <!-- HotLabel SDK -->
+  <!-- HotLabel SDK added to header -->
   <script src="https://cdn.hotlabel.ai/sdk/v1/hotlabel.min.js"></script>
   <script>
     window.HotLabel.init({
       publisherId: "your-publisher-id",
-      adSlotSelector: ".ad-container",
+      adSlotSelector: ".hotlabel-container",
       apiEndpoint: "https://api.hotlabel.ai/v1",
       theme: "light"
     });
@@ -194,69 +270,59 @@ document.addEventListener('hotlabel-task-completed', function(e) {
   
   <style>
     body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-    header { display: flex; justify-content: space-between; align-items: center; }
-    .main-content { display: grid; grid-template-columns: 1fr 300px; gap: 20px; margin-top: 20px; }
-    .content { border: 1px solid #eee; padding: 20px; }
-    .sidebar { display: flex; flex-direction: column; gap: 20px; }
-    .ad-box { width: 300px; height: 250px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
-    .article-footer { margin-top: 20px; }
+    .download-button { 
+      background: #2196F3; 
+      color: white; 
+      padding: 12px 24px; 
+      border-radius: 4px; 
+      border: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>TechNews Daily</h1>
-    <nav>
-      <a href="#">Home</a> | 
-      <a href="#">Technology</a> | 
-      <a href="#">Business</a> | 
-      <a href="#">Science</a>
-    </nav>
+    <h1>File Downloads</h1>
   </header>
   
-  <div class="main-content">
-    <div class="content">
-      <h2>Latest AI Advancements Revolutionize Healthcare</h2>
-      <p>New breakthrough in artificial intelligence is changing how doctors diagnose rare diseases...</p>
-      <p>Researchers at leading universities have developed algorithms that can detect patterns in medical imaging that human doctors might miss...</p>
+  <main>
+    <div class="file-card">
+      <h2>Example Report.pdf</h2>
+      <p>A sample PDF file for demonstration</p>
       
-      <!-- In-article ad with HotLabel -->
-      <div id="div-gpt-ad-1" class="ad-container ad-box">
-        <!-- HotLabel task will appear here -->
-        HotLabel Task - High Revenue, Better UX
-      </div>
-      
-      <p>The technology is already being deployed in several major hospitals across the country...</p>
-      <p>Patient outcomes have improved by an estimated 23% in early trials...</p>
-      
-      <div class="article-footer">
-        <h3>Related Articles</h3>
-        <ul>
-          <li>Machine Learning Models Predict Drug Interactions</li>
-          <li>Virtual Reality Used in Surgical Training</li>
-          <li>New Mobile App Helps Patients Manage Chronic Conditions</li>
-        </ul>
-      </div>
+      <button 
+        class="download-button hotlabel-container" 
+        data-action="download"
+        data-file="example.pdf"
+      >
+        Download File
+      </button>
     </div>
+  </main>
+</body>
+</html>
+  `;
+  
+  // Example of the modal task that appears
+  const modalTaskExample = `
+<!-- This modal appears automatically when the download button is clicked -->
+<div class="hotlabel-modal">
+  <div class="hotlabel-modal-content">
+    <h3>Complete this quick task to download</h3>
     
-    <div class="sidebar">
-      <!-- Sidebar ad with HotLabel -->
-      <div id="div-gpt-ad-2" class="ad-container ad-box">
-        <!-- HotLabel task will appear here -->
-        HotLabel Task - High Revenue, Better UX
-      </div>
+    <div class="hotlabel-task">
+      <img src="https://example.com/image-to-classify.jpg" alt="Task image" />
+      <p>How many people are in this image?</p>
       
-      <div class="popular-posts">
-        <h3>Popular Posts</h3>
-        <ul>
-          <li>Top 10 Tech Trends for 2025</li>
-          <li>Review: New Quantum Computing Breakthrough</li>
-          <li>How Blockchain is Transforming Supply Chains</li>
-        </ul>
+      <div class="hotlabel-options">
+        <button>0</button>
+        <button>1</button>
+        <button>2</button>
+        <button>3 or more</button>
       </div>
     </div>
   </div>
-</body>
-</html>
+</div>
   `;
   
   // Handle starting the integration demo
@@ -268,7 +334,6 @@ document.addEventListener('hotlabel-task-completed', function(e) {
     
     // Reset website state
     setCurrentTab("before");
-    setAdsReady(true);
     setHotlabelReady(false);
     
     // Start the timer
@@ -297,7 +362,6 @@ document.addEventListener('hotlabel-task-completed', function(e) {
     setCurrentStep(0);
     setCompletedSteps([]);
     setCurrentTab("before");
-    setAdsReady(true);
     setHotlabelReady(false);
   };
   
@@ -315,10 +379,6 @@ document.addEventListener('hotlabel-task-completed', function(e) {
         
         // Update website view when appropriate steps are completed
         if (index === 0) {
-          setAdsReady(false);
-        }
-        
-        if (index === 1) {
           setHotlabelReady(true);
           setCurrentTab("after");
         }
@@ -353,12 +413,12 @@ document.addEventListener('hotlabel-task-completed', function(e) {
   
   return (
     <div className="w-full max-w-6xl mx-auto">
-      {/* Timer header */}
+      {/* Header section */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold mb-1">5-Minute Integration Challenge</h2>
+          <h2 className="text-2xl font-bold mb-1">2-Minute Integration Challenge</h2>
           <p className="text-muted-foreground">
-            Watch how quickly you can replace traditional ads with HotLabel
+            Learn how quickly you can add HotLabel to your website
           </p>
         </div>
         
@@ -375,7 +435,7 @@ document.addEventListener('hotlabel-task-completed', function(e) {
                 </Badge>
               ) : (
                 <Button onClick={startIntegration} size="lg">
-                  <Clock className="mr-2 h-4 w-4" /> Start 5-Minute Integration
+                  <Clock className="mr-2 h-4 w-4" /> Start 2-Minute Integration
                 </Button>
               )}
             </>
@@ -463,7 +523,7 @@ document.addEventListener('hotlabel-task-completed', function(e) {
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-lg font-semibold">Website Preview</h3>
                   <TabsList>
-                    <TabsTrigger value="before" disabled={isRunning && !adsReady}>
+                    <TabsTrigger value="before" disabled={isRunning && !hotlabelReady}>
                       Before
                     </TabsTrigger>
                     <TabsTrigger value="after" disabled={isRunning && !hotlabelReady}>
@@ -547,4 +607,4 @@ document.addEventListener('hotlabel-task-completed', function(e) {
   );
 };
 
-export default IntegrationTimerDemo;
+export default SimplifiedIntegrationDemo;
