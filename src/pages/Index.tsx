@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { fileData, FileItem, adData } from "@/utils/fileData";
 import FileCard from "@/components/FileCard";
 import PopupAd from "@/components/PopupAd";
 import DownloadModal from "@/components/DownloadModal";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import SimplifiedToggle from "@/components/simplified-toggle";
+import PublisherBenefitsSection from "@/components/PublisherBenefitsSection";
 import { ArrowDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -286,6 +288,9 @@ const Index = () => {
             <Button variant="ghost">Home</Button>
             <Button variant="ghost">Browse</Button>
             <Button variant="ghost">About</Button>
+            <Link to="/integration-timer">
+              <Button variant="ghost">For Publishers</Button>
+            </Link>
             <Button variant="default" className="ml-2">Go Premium</Button>
             {/* Simplified HotLabel Toggle */}
             <SimplifiedToggle 
@@ -315,9 +320,17 @@ const Index = () => {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
               Download Files with <span className="text-gradient">Ease</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-xl text-muted-foreground mb-6">
               Fast, secure, and convenient file downloads for all your needs
             </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+              <Link to="/integration-timer">
+                <Button size="lg" className="bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 shadow-lg text-white">
+                  Try our 5-Minute Integration Demo
+                </Button>
+              </Link>
+            </div>
             
             <div className="relative max-w-xl mx-auto mb-12">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-blue-400/20 rounded-lg blur-xl"></div>
@@ -368,6 +381,9 @@ const Index = () => {
             </div>
           )}
         </section>
+        
+        {/* Publisher Benefits Section */}
+        <PublisherBenefitsSection />
       </main>
       
       {/* Footer */}
