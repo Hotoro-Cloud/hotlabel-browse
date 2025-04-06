@@ -32,7 +32,7 @@ const IntegrationTimer = () => {
       
       <main className="flex-grow pt-8 pb-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6">
+          <div className="max-w-[1400px] mx-auto bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6">
             <IntegrationTimerDemo />
           </div>
         </div>

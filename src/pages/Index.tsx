@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { PublisherDashboard } from "@/components/PublisherDashboard";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 // Define animations that will be used 
 const AnimationStyles = () => (
@@ -444,6 +446,23 @@ const Index = () => {
           className="popup-ad fixed"
         />
       ))}
+      
+      <Tabs defaultValue="chat" className="flex-1">
+        <TabsList>
+          <TabsTrigger value="chat">Chat</TabsTrigger>
+          <TabsTrigger value="publisher">Publisher Dashboard</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="chat" className="mt-0 border-0 p-0">
+          {/* Chat content */}
+        </TabsContent>
+        
+        <TabsContent value="publisher" className="mt-0 border-0 p-0">
+          <div className="flex h-full flex-col">
+            <PublisherDashboard />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

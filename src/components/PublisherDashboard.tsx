@@ -70,7 +70,7 @@ const StatCard = ({ title, value, description, trend, icon }: StatCardProps) => 
   </Card>
 );
 
-const PublisherDashboard = () => {
+export const PublisherDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
   
   return (

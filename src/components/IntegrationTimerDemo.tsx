@@ -1,329 +1,452 @@
-<div className="flex gap-2 text-xs mb-3">
-                <Badge variant={!hotlabelReady ? "default" : "outline"}>
-                  Traditional Ads
-                </Badge>
-                <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                <Badge variant={hotlabelReady ? "default" : "outline"}>
-                  HotLabel Tasks
-                </Badge>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-hidden">
-              {viewMode === "rendered" ? (
-                <div className="w-full h-full p-2">
-                  <iframe
-                    className="w-full h-full border rounded-md"
-                    srcDoc={hotlabelReady ? websiteAfterHtml : websiteBeforeHtml}
-                    title="Website Preview"
-                    sandbox="allow-scripts"
-                  />
-                </div>
-              ) : (
-                <div className="bg-gray-50 dark:bg-gray-900/20 p-4 h-full overflow-auto">
-                  <pre className="p-4 text-xs whitespace-pre-wrap bg-white dark:bg-gray-800 rounded-md">
-                    <code>{hotlabelReady ? websiteAfterHtml : websiteBeforeHtml}</code>
-                  </pre>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
-      </div>
-      
-      {/* Results section - only show after completion */}
-      {completedSteps.length === integrationSteps.length && (
-        <Card className="mt-8 bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-900">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
-                <CheckCircle className="h-6 w-6 text-green-500" />
-              </div>
-              <h3 className="text-xl font-semibold">Integration Complete!</h3>
-            </div>
-            
-            <p className="mb-6">
-              You've successfully replaced traditional ads with HotLabel in just {formatTime(totalTime - timeRemaining)}! 
-              Your website is now ready to generate more revenue while providing a better user experience.
-            </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Revenue Increase</h4>
-                <div className="text-2xl font-bold text-green-500">+1,150%</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Integration Time</h4>
-                <div className="text-2xl font-bold">{formatTime(totalTime - timeRemaining)}</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Code Changes</h4>
-                <div className="text-2xl font-bold">5 lines</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">User Experience</h4>
-                <div className="text-2xl font-bold text-green-500">+270%</div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-    </div>
-  );
-};
-
-export default SimplifiedIntegrationDemo;              <div className="flex gap-2 text-xs mb-3">
-                <Badge variant={!hotlabelReady ? "default" : "outline"}>
-                  Traditional Ads
-                </Badge>
-                <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                <Badge variant={hotlabelReady ? "default" : "outline"}>
-                  HotLabel Tasks
-                </Badge>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-hidden">
-              {viewMode === "rendered" ? (
-                <iframe
-                  ref={iframeRef}
-                  className="w-full h-full border-none"
-                  srcDoc={hotlabelReady ? websiteAfterHtml : websiteBeforeHtml}
-                  title="Website Preview"
-                />
-              ) : (
-                <div className="bg-gray-50 dark:bg-gray-900/20 p-4 h-full overflow-auto">
-                  <pre className="p-4 text-xs whitespace-pre-wrap bg-white dark:bg-gray-800 rounded-md">
-                    <code>{hotlabelReady ? websiteAfterHtml : websiteBeforeHtml}</code>
-                  </pre>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
-      </div>
-      
-      {/* Results section - only show after completion */}
-      {completedSteps.length === integrationSteps.length && (
-        <Card className="mt-8 bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-900">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
-                <CheckCircle className="h-6 w-6 text-green-500" />
-              </div>
-              <h3 className="text-xl font-semibold">Integration Complete!</h3>
-            </div>
-            
-            <p className="mb-6">
-              You've successfully replaced traditional ads with HotLabel in just {formatTime(totalTime - timeRemaining)}! 
-              Your website is now ready to generate more revenue while providing a better user experience.
-            </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Revenue Increase</h4>
-                <div className="text-2xl font-bold text-green-500">+1,150%</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Integration Time</h4>
-                <div className="text-2xl font-bold">{formatTime(totalTime - timeRemaining)}</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Code Changes</h4>
-                <div className="text-2xl font-bold">5 lines</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">User Experience</h4>
-                <div className="text-2xl font-bold text-green-500">+270%</div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-    </div>
-  );
-};
-
-export default SimplifiedIntegrationDemo;import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Circle, CheckCircle, Clock, ArrowRight } from "lucide-react";
+import Editor from "@monaco-editor/react";
 
-const SimplifiedIntegrationDemo = () => {
+const IntegrationTimerDemo = () => {
   // Timer state
   const [isRunning, setIsRunning] = useState(false);
-  const [totalTime, setTotalTime] = useState(120); // 2 minutes in seconds
-  const [timeRemaining, setTimeRemaining] = useState(120);
+  const [totalTime, setTotalTime] = useState(300); // 5 minutes in seconds
+  const [timeRemaining, setTimeRemaining] = useState(300);
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Website view state
   const [currentTab, setCurrentTab] = useState("before");
+  const [adsReady, setAdsReady] = useState(true);
   const [hotlabelReady, setHotlabelReady] = useState(false);
   
-  // State for visual mockup of website
-  const [showRenderedPreview, setShowRenderedPreview] = useState(true);
-  
-  // Integration steps - simplified to just 2 key steps
+  // Integration steps
   const integrationSteps = [
     {
-      name: "Add HotLabel SDK",
-      time: 60,
-      code: `<!-- Add HotLabel SDK to your website header -->
+      name: "Remove Popup Ad Code",
+      time: 45,
+      code: `<!-- Remove intrusive popup ad code -->
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const popup = document.createElement('div');
+      popup.innerHTML = \`
+        <div class="popup-overlay">
+          <div class="popup-content">
+            <h3>Wait! Before you download...</h3>
+            <div class="ad-space"><!-- Ad content --></div>
+            <button onclick="closePopup()">
+              Continue to Download (15s)
+            </button>
+          </div>
+        </div>
+      \`;
+      document.body.appendChild(popup);
+    }, 1000);
+  });
+</script>
+
+<style>
+  .popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+  }
+  .popup-content {
+    /* Intrusive popup styling */
+  }
+</style>`
+    },
+    {
+      name: "Add HotLabel AI Tasks",
+      time: 45,
+      code: `<!-- Add HotLabel SDK -->
 <script src="https://cdn.hotlabel.ai/sdk/v1/hotlabel.min.js"></script>
 <script>
   window.HotLabel.init({
     publisherId: "your-publisher-id",
-    adSlotSelector: ".hotlabel-container",
-    apiEndpoint: "https://api.hotlabel.ai/v1",
-    theme: "light" // or "dark"
+    taskType: "pre-action", // Shows task before user action
+    theme: "light"
   });
-</script>`
+</script>
+
+<!-- Add to your download button -->
+<button 
+  data-hotlabel="download"
+  onclick="startDownload()">
+  Download Now
+</button>`
     },
     {
-      name: "Create Modal Trigger",
-      time: 60,
-      code: `<!-- Add this button to trigger a download with HotLabel task -->
-<button 
-  id="download-button"
-  class="hotlabel-container"
-  data-action="download"
-  data-file="example.pdf"
->
-  Download File
-</button>
-
-<!-- The SDK will automatically handle the rest! -->
-<!-- It will display an AI task before allowing the download -->
-`
+      name: "Configure User Flow",
+      time: 30,
+      code: `// Configure the download flow
+function startDownload() {
+  // HotLabel will automatically show an AI task
+  // before initiating the download
+  
+  // The download will start after task completion
+  window.HotLabel.onTaskComplete(() => {
+    // Start your download here
+    initiateDownload();
+  });
+}`
     }
   ];
   
-  // Before and after website HTML - simplified
-  const websiteBeforeHtml = `
-<!DOCTYPE html>
+  // Update the movie poster URL to use Les Aventuriers poster
+  const moviePosterUrl = "https://upload.wikimedia.org/wikipedia/en/1/16/Les_Aventuriers.png";
+
+  // Before and after website HTML
+  const websiteCode = {
+    before: `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Downloads - Your Website</title>
-  
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .download-button { 
-      background: #2196F3; 
-      color: white; 
-      padding: 12px 24px; 
-      border-radius: 4px; 
-      border: none;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>File Downloads</h1>
-  </header>
-  
-  <main>
-    <div class="file-card">
-      <h2>Example Report.pdf</h2>
-      <p>A sample PDF file for demonstration</p>
-      
-      <button class="download-button">
-        Download File
-      </button>
-    </div>
-  </main>
-</body>
-</html>
-  `;
-  
-  const websiteAfterHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Downloads - Your Website</title>
-  
-  <!-- HotLabel SDK added to header -->
-  <script src="https://cdn.hotlabel.ai/sdk/v1/hotlabel.min.js"></script>
+  <title>StreamFlix - Les Aventuriers (1967)</title>
   <script>
-    window.HotLabel.init({
-      publisherId: "your-publisher-id",
-      adSlotSelector: ".hotlabel-container",
-      apiEndpoint: "https://api.hotlabel.ai/v1",
-      theme: "light"
-    });
+    function showPrerollAd() {
+      const popup = document.getElementById('adPopup');
+      popup.style.display = 'flex';
+      let timeLeft = 30;
+      const timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          document.getElementById('playBtn').disabled = false;
+          document.getElementById('timer-text').innerHTML = 'You can now play the video';
+        }
+      }, 1000);
+    }
   </script>
-  
   <style>
-    body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .download-button { 
-      background: #2196F3; 
-      color: white; 
-      padding: 12px 24px; 
-      border-radius: 4px; 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .movie-card {
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .movie-poster {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+    }
+    .movie-info { padding: 24px; }
+    .movie-title { 
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .movie-meta {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .play-btn {
+      background: #2563eb;
+      color: white;
       border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 500;
       cursor: pointer;
+      transition: background 0.2s;
+    }
+    .play-btn:hover { background: #1d4ed8; }
+    .play-btn:disabled { 
+      background: #475569;
+      cursor: not-allowed;
+    }
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    .popup-content {
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+    }
+    .ad-space {
+      background: #334155;
+      padding: 20px;
+      margin: 16px 0;
+      border-radius: 8px;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+    }
+    .timer-text {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 16px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>File Downloads</h1>
-  </header>
-  
-  <main>
-    <div class="file-card">
-      <h2>Example Report.pdf</h2>
-      <p>A sample PDF file for demonstration</p>
-      
-      <button 
-        class="download-button hotlabel-container" 
-        data-action="download"
-        data-file="example.pdf"
+  <div class="container">
+    <div class="movie-card">
+      <img 
+        src="${moviePosterUrl}"
+        alt="Les Aventuriers Movie Poster"
+        class="movie-poster"
       >
-        Download File
-      </button>
-    </div>
-  </main>
-</body>
-</html>
-  `;
-  
-  // Example of the modal task that appears
-  const modalTaskExample = `
-<!-- This modal appears automatically when the download button is clicked -->
-<div class="hotlabel-modal">
-  <div class="hotlabel-modal-content">
-    <h3>Complete this quick task to download</h3>
-    
-    <div class="hotlabel-task">
-      <img src="https://example.com/image-to-classify.jpg" alt="Task image" />
-      <p>How many people are in this image?</p>
-      
-      <div class="hotlabel-options">
-        <button>0</button>
-        <button>1</button>
-        <button>2</button>
-        <button>3 or more</button>
+      <div class="movie-info">
+        <h1 class="movie-title">Les Aventuriers (The Last Adventure)</h1>
+        <div class="movie-meta">
+          1967 • Adventure • 1h 50m • HD
+        </div>
+        <button class="play-btn" onclick="showPrerollAd()">
+          ▶ Play Now
+        </button>
       </div>
     </div>
   </div>
-</div>
-  `;
+
+  <div id="adPopup" class="popup-overlay">
+    <div class="popup-content">
+      <h3>Before You Watch</h3>
+      <div class="ad-space">
+        Advertisement
+        <br>
+        (30 second wait required)
+      </div>
+      <p id="timer-text" class="timer-text">
+        Please wait <span id="timer">30</span> seconds...
+      </p>
+      <button id="playBtn" class="play-btn" disabled>
+        Continue to Video
+      </button>
+    </div>
+  </div>
+</body>
+</html>`,
+
+    after: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>StreamFlix - Les Aventuriers (1967)</title>
+  <script>
+    // Mock HotLabel SDK
+    window.HotLabel = {
+      init: function(config) {
+        console.log('HotLabel initialized:', config);
+      },
+      onTaskComplete: function(callback) {
+        const taskModal = document.createElement('div');
+        taskModal.innerHTML = \`
+          <div id="hotlabelTask" class="popup-overlay" style="display: flex;">
+            <div class="popup-content">
+              <h3 class="task-title">Quick Task Before Playing</h3>
+              <div class="task-container">
+                <div class="task-description">
+                  Help improve AI by analyzing this expression
+                </div>
+                <div class="task-image">
+                  <img src="https://i.pinimg.com/736x/c6/fa/f9/c6faf98c4385d683b8ce143273bd933e.jpg" 
+                       alt="Intense Expression"
+                       style="width: 100%; border-radius: 8px; object-fit: cover; height: 200px;">
+                </div>
+                <div class="task-question">
+                  What emotion best describes this expression?
+                </div>
+                <div class="task-options">
+                  <button onclick="completeTask('intense')" class="task-btn">Intense</button>
+                  <button onclick="completeTask('determined')" class="task-btn">Determined</button>
+                  <button onclick="completeTask('serious')" class="task-btn">Serious</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        \`;
+        document.body.appendChild(taskModal);
+
+        window.completeTask = function(answer) {
+          document.getElementById('hotlabelTask').remove();
+          const player = document.createElement('div');
+          player.innerHTML = \`
+            <div class="video-player">
+              <div class="player-overlay">
+                ▶ Video playing... (Demo)
+              </div>
+            </div>
+          \`;
+          document.querySelector('.movie-card').appendChild(player);
+          callback();
+        }
+      }
+    };
+
+    window.HotLabel.init({
+      publisherId: "demo-publisher",
+      taskType: "pre-action"
+    });
+
+    function startVideo() {
+      window.HotLabel.onTaskComplete(() => {
+        console.log('Video started after task completion');
+      });
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .movie-card {
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .movie-poster {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+    }
+    .movie-info { padding: 24px; }
+    .movie-title { 
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .movie-meta {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .play-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .play-btn:hover { background: #1d4ed8; }
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    .popup-content {
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 480px;
+    }
+    .task-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .task-container {
+      background: #334155;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .task-description {
+      color: #94a3b8;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .task-image {
+      margin-bottom: 16px;
+    }
+    .task-question {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .task-options {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .task-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .task-btn:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+    .video-player {
+      background: #0f172a;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .player-overlay {
+      color: #94a3b8;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="movie-card">
+      <img 
+        src="${moviePosterUrl}"
+        alt="Les Aventuriers Movie Poster"
+        class="movie-poster"
+      >
+      <div class="movie-info">
+        <h1 class="movie-title">Les Aventuriers (The Last Adventure)</h1>
+        <div class="movie-meta">
+          1967 • Adventure • 1h 50m • HD
+        </div>
+        <button 
+          class="play-btn"
+          onclick="startVideo()"
+          data-hotlabel="play">
+          ▶ Play Now
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+  };
   
   // Handle starting the integration demo
   const startIntegration = () => {
@@ -334,6 +457,7 @@ const SimplifiedIntegrationDemo = () => {
     
     // Reset website state
     setCurrentTab("before");
+    setAdsReady(true);
     setHotlabelReady(false);
     
     // Start the timer
@@ -362,6 +486,7 @@ const SimplifiedIntegrationDemo = () => {
     setCurrentStep(0);
     setCompletedSteps([]);
     setCurrentTab("before");
+    setAdsReady(true);
     setHotlabelReady(false);
   };
   
@@ -379,6 +504,10 @@ const SimplifiedIntegrationDemo = () => {
         
         // Update website view when appropriate steps are completed
         if (index === 0) {
+          setAdsReady(false);
+        }
+        
+        if (index === 1) {
           setHotlabelReady(true);
           setCurrentTab("after");
         }
@@ -410,201 +539,531 @@ const SimplifiedIntegrationDemo = () => {
   
   // Calculate time percentage
   const timePercentage = Math.max(0, (timeRemaining / totalTime) * 100);
-  
-  return (
-    <div className="w-full max-w-6xl mx-auto">
-      {/* Header section */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-1">2-Minute Integration Challenge</h2>
-          <p className="text-muted-foreground">
-            Learn how quickly you can add HotLabel to your website
-          </p>
+
+  // Initial code templates
+  const [beforeCode, setBeforeCode] = useState(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>StreamFlix - Les Aventuriers (1967)</title>
+  <script>
+    function showPrerollAd() {
+      const popup = document.getElementById('adPopup');
+      popup.style.display = 'flex';
+      let timeLeft = 30;
+      const timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          document.getElementById('playBtn').disabled = false;
+          document.getElementById('timer-text').innerHTML = 'You can now play the video';
+        }
+      }, 1000);
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .movie-card {
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .movie-poster {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+    }
+    .movie-info { padding: 24px; }
+    .movie-title { 
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .movie-meta {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .play-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .play-btn:hover { background: #1d4ed8; }
+    .play-btn:disabled { 
+      background: #475569;
+      cursor: not-allowed;
+    }
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    .popup-content {
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+    }
+    .ad-space {
+      background: #334155;
+      padding: 20px;
+      margin: 16px 0;
+      border-radius: 8px;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+    }
+    .timer-text {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="movie-card">
+      <img 
+        src="${moviePosterUrl}"
+        alt="Les Aventuriers Movie Poster"
+        class="movie-poster"
+      >
+      <div class="movie-info">
+        <h1 class="movie-title">Les Aventuriers (The Last Adventure)</h1>
+        <div class="movie-meta">
+          1967 • Adventure • 1h 50m • HD
         </div>
-        
-        <div className="flex items-center gap-3">
-          {isRunning ? (
-            <div className="text-2xl font-mono font-bold">
-              {formatTime(timeRemaining)}
-            </div>
-          ) : (
-            <>
-              {completedSteps.length === integrationSteps.length ? (
-                <Badge variant="default" className="text-md px-3 py-1 bg-green-500">
-                  Completed in {formatTime(totalTime - timeRemaining)}
-                </Badge>
-              ) : (
-                <Button onClick={startIntegration} size="lg">
-                  <Clock className="mr-2 h-4 w-4" /> Start 2-Minute Integration
-                </Button>
-              )}
-            </>
-          )}
-          
-          {(isRunning || completedSteps.length > 0) && (
-            <Button variant="outline" onClick={resetDemo}>
-              Reset Demo
-            </Button>
-          )}
-        </div>
+        <button class="play-btn" onclick="showPrerollAd()">
+          ▶ Play Now
+        </button>
       </div>
-      
-      {/* Progress indicators */}
-      {(isRunning || completedSteps.length > 0) && (
-        <div className="mb-8">
-          <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium">
-              Step {Math.min(currentStep + 1, integrationSteps.length)} of {integrationSteps.length}
-            </span>
-            <span className="text-sm font-medium">
-              {isRunning ? `${formatTime(timeRemaining)} remaining` : 'Integration complete!'}
-            </span>
+    </div>
+  </div>
+
+  <div id="adPopup" class="popup-overlay">
+    <div class="popup-content">
+      <h3>Before You Watch</h3>
+      <div class="ad-space">
+        Advertisement
+        <br>
+        (30 second wait required)
+      </div>
+      <p id="timer-text" class="timer-text">
+        Please wait <span id="timer">30</span> seconds...
+      </p>
+      <button id="playBtn" class="play-btn" disabled>
+        Continue to Video
+      </button>
+    </div>
+  </div>
+</body>
+</html>`);
+
+  const [afterCode, setAfterCode] = useState(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>StreamFlix - Les Aventuriers (1967)</title>
+  <script>
+    // Mock HotLabel SDK
+    window.HotLabel = {
+      init: function(config) {
+        console.log('HotLabel initialized:', config);
+      },
+      onTaskComplete: function(callback) {
+        const taskModal = document.createElement('div');
+        taskModal.innerHTML = \`
+          <div id="hotlabelTask" class="popup-overlay" style="display: flex;">
+            <div class="popup-content">
+              <h3 class="task-title">Quick Task Before Playing</h3>
+              <div class="task-container">
+                <div class="task-description">
+                  Help improve AI by analyzing this expression
+                </div>
+                <div class="task-image">
+                  <img src="https://i.pinimg.com/736x/c6/fa/f9/c6faf98c4385d683b8ce143273bd933e.jpg" 
+                       alt="Intense Expression"
+                       style="width: 100%; border-radius: 8px; object-fit: cover; height: 200px;">
+                </div>
+                <div class="task-question">
+                  What emotion best describes this expression?
+                </div>
+                <div class="task-options">
+                  <button onclick="completeTask('intense')" class="task-btn">Intense</button>
+                  <button onclick="completeTask('determined')" class="task-btn">Determined</button>
+                  <button onclick="completeTask('serious')" class="task-btn">Serious</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <Progress value={isRunning ? timePercentage : 100} className="h-2" />
-        </div>
-      )}
-      
-      {/* Main content area */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left side: Integration steps */}
-        <div>
-          <Card className="h-full">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Integration Steps</h3>
-              
-              <div className="space-y-4">
-                {integrationSteps.map((step, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex items-start gap-4 p-4 rounded-lg ${
-                      currentStep === index 
-                        ? 'bg-primary/10 border border-primary/20' 
-                        : completedSteps.includes(index)
-                          ? 'bg-green-50 dark:bg-green-950/20'
-                          : 'bg-gray-50 dark:bg-gray-900/20'
-                    }`}
-                  >
-                    <div className="mt-0.5">
-                      {completedSteps.includes(index) ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : currentStep === index ? (
-                        <Circle className="h-5 w-5 text-primary animate-pulse" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-gray-300 dark:text-gray-600" />
-                      )}
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <h4 className="font-medium">{step.name}</h4>
-                        <span className="text-xs text-muted-foreground">
-                          {step.time} sec
-                        </span>
-                      </div>
-                      
-                      {(currentStep === index || completedSteps.includes(index)) && (
-                        <pre className="mt-3 p-3 bg-black/80 text-white rounded-md text-xs overflow-x-auto">
-                          <code>{step.code}</code>
-                        </pre>
-                      )}
-                    </div>
-                  </div>
-                ))}
+        \`;
+        document.body.appendChild(taskModal);
+
+        window.completeTask = function(answer) {
+          document.getElementById('hotlabelTask').remove();
+          const player = document.createElement('div');
+          player.innerHTML = \`
+            <div class="video-player">
+              <div class="player-overlay">
+                ▶ Video playing... (Demo)
               </div>
             </div>
-          </Card>
+          \`;
+          document.querySelector('.movie-card').appendChild(player);
+          callback();
+        }
+      }
+    };
+
+    window.HotLabel.init({
+      publisherId: "demo-publisher",
+      taskType: "pre-action"
+    });
+
+    function startVideo() {
+      window.HotLabel.onTaskComplete(() => {
+        console.log('Video started after task completion');
+      });
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .movie-card {
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .movie-poster {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+    }
+    .movie-info { padding: 24px; }
+    .movie-title { 
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .movie-meta {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .play-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .play-btn:hover { background: #1d4ed8; }
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    .popup-content {
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 480px;
+    }
+    .task-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .task-container {
+      background: #334155;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .task-description {
+      color: #94a3b8;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .task-image {
+      margin-bottom: 16px;
+    }
+    .task-question {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .task-options {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .task-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .task-btn:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+    .video-player {
+      background: #0f172a;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .player-overlay {
+      color: #94a3b8;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="movie-card">
+      <img 
+        src="${moviePosterUrl}"
+        alt="Les Aventuriers Movie Poster"
+        class="movie-poster"
+      >
+      <div class="movie-info">
+        <h1 class="movie-title">Les Aventuriers (The Last Adventure)</h1>
+        <div class="movie-meta">
+          1967 • Adventure • 1h 50m • HD
         </div>
-        
-        {/* Right side: Website preview */}
-        <div>
-          <Card className="h-full overflow-hidden">
-            <Tabs value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
-              <div className="px-6 pt-6 pb-2">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-semibold">Website Preview</h3>
-                  <TabsList>
-                    <TabsTrigger value="before" disabled={isRunning && !hotlabelReady}>
-                      Before
-                    </TabsTrigger>
-                    <TabsTrigger value="after" disabled={isRunning && !hotlabelReady}>
-                      After
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-                
-                <div className="flex gap-2 text-xs mb-3">
-                  <Badge variant={currentTab === "before" ? "default" : "outline"}>
-                    Traditional Ads
-                  </Badge>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  <Badge variant={currentTab === "after" ? "default" : "outline"}>
-                    HotLabel Tasks
-                  </Badge>
-                </div>
-              </div>
-              
-              <TabsContent value="before" className="flex-1 overflow-auto m-0 bg-gray-50 dark:bg-gray-900/20 p-4">
-                <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm overflow-auto h-full">
-                  <pre className="p-4 text-xs whitespace-pre-wrap">
-                    <code>{websiteBeforeHtml}</code>
-                  </pre>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="after" className="flex-1 overflow-auto m-0 bg-gray-50 dark:bg-gray-900/20 p-4">
-                <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm overflow-auto h-full">
-                  <pre className="p-4 text-xs whitespace-pre-wrap">
-                    <code>{websiteAfterHtml}</code>
-                  </pre>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </Card>
-        </div>
+        <button 
+          class="play-btn"
+          onclick="startVideo()"
+          data-hotlabel="play">
+          ▶ Play Now
+        </button>
       </div>
-      
-      {/* Results section - only show after completion */}
-      {completedSteps.length === integrationSteps.length && (
-        <Card className="mt-8 bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-900">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
-                <CheckCircle className="h-6 w-6 text-green-500" />
+    </div>
+  </div>
+</body>
+</html>`);
+
+  // Function to create preview iframe
+  const createPreview = (code: string) => {
+    return `
+      <html>
+        <head>
+          <style>
+            body { font-family: system-ui, sans-serif; padding: 20px; }
+          </style>
+        </head>
+        <body>${code}</body>
+      </html>
+    `;
+  };
+
+  return (
+    <div className="w-full max-w-6xl mx-auto p-6">
+      {/* Header Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-2">Interactive Implementation Demo</h2>
+        <p className="text-muted-foreground">
+          See how HotLabel replaces intrusive ads with engaging AI tasks on streaming platforms
+        </p>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Traditional Implementation */}
+        <Card className="overflow-hidden">
+          <div className="p-6 border-b bg-gray-50 dark:bg-gray-900">
+            <div className="flex items-center justify-between">
+              <div>
+                <Badge variant="destructive" className="mb-2">Traditional Popup Ads</Badge>
+                <h3 className="text-2xl font-semibold">30-Second Forced Ad Wait</h3>
               </div>
-              <h3 className="text-xl font-semibold">Integration Complete!</h3>
+              <div className="text-sm text-muted-foreground">
+                Current Industry Standard
+              </div>
             </div>
-            
-            <p className="mb-6">
-              You've successfully replaced traditional ads with HotLabel in just {formatTime(totalTime - timeRemaining)}! 
-              Your website is now ready to generate more revenue while providing a better user experience.
-            </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Revenue Increase</h4>
-                <div className="text-2xl font-bold text-green-500">+1,150%</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Integration Time</h4>
-                <div className="text-2xl font-bold">{formatTime(totalTime - timeRemaining)}</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Code Changes</h4>
-                <div className="text-2xl font-bold">5 lines</div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">User Experience</h4>
-                <div className="text-2xl font-bold text-green-500">+270%</div>
-              </div>
+          </div>
+          
+          {/* Taller code editor */}
+          <div className="h-[700px] border-b">
+            <Editor
+              height="700px"
+              defaultLanguage="html"
+              value={beforeCode}
+              onChange={(value) => setBeforeCode(value || '')}
+              theme="vs-dark"
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineHeight: 1.6,
+                padding: { top: 20 },
+              }}
+            />
+          </div>
+          
+          {/* Taller preview */}
+          <div className="h-[900px] bg-[#0f172a]">
+            <div className="p-4 border-b bg-gray-50 dark:bg-gray-900">
+              <h4 className="font-medium">Live Preview</h4>
             </div>
+            <iframe
+              title="Before Preview"
+              srcDoc={createPreview(beforeCode)}
+              className="w-full h-full border-0"
+              sandbox="allow-scripts allow-popups"
+            />
           </div>
         </Card>
-      )}
+
+        {/* HotLabel Implementation */}
+        <Card className="overflow-hidden">
+          <div className="p-6 border-b bg-gray-50 dark:bg-gray-900">
+            <div className="flex items-center justify-between">
+              <div>
+                <Badge variant="success" className="mb-2">HotLabel AI Tasks</Badge>
+                <h3 className="text-2xl font-semibold">Engaging User Experience</h3>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Modern Alternative
+              </div>
+            </div>
+          </div>
+          
+          {/* Taller code editor */}
+          <div className="h-[700px] border-b">
+            <Editor
+              height="700px"
+              defaultLanguage="html"
+              value={afterCode}
+              onChange={(value) => setAfterCode(value || '')}
+              theme="vs-dark"
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineHeight: 1.6,
+                padding: { top: 20 },
+              }}
+            />
+          </div>
+          
+          {/* Taller preview */}
+          <div className="h-[900px] bg-[#0f172a]">
+            <div className="p-4 border-b bg-gray-50 dark:bg-gray-900">
+              <h4 className="font-medium">Live Preview</h4>
+            </div>
+            <iframe
+              title="After Preview"
+              srcDoc={createPreview(afterCode)}
+              className="w-full h-full border-0"
+              sandbox="allow-scripts allow-popups"
+            />
+          </div>
+        </Card>
+      </div>
+
+      {/* Implementation Guide */}
+      <Card className="mt-6">
+        <div className="p-8">
+          <h3 className="text-2xl font-semibold mb-8">Quick Implementation Guide</h3>
+          <div className="grid grid-cols-3 gap-12">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-100 dark:bg-blue-900 w-8 h-8 rounded-full flex items-center justify-center text-blue-700 dark:text-blue-300 font-semibold">1</div>
+                <div className="font-medium text-lg">Add SDK</div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                <pre className="text-sm overflow-x-auto">
+                  {`<script src="https://cdn.hotlabel.ai/sdk/v1/hotlabel.min.js"></script>`}
+                </pre>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-100 dark:bg-blue-900 w-8 h-8 rounded-full flex items-center justify-center text-blue-700 dark:text-blue-300 font-semibold">2</div>
+                <div className="font-medium text-lg">Initialize</div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                <pre className="text-sm overflow-x-auto">
+                  {`window.HotLabel.init({
+  publisherId: "your-id",
+  taskType: "pre-action"
+});`}
+                </pre>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-100 dark:bg-blue-900 w-8 h-8 rounded-full flex items-center justify-center text-blue-700 dark:text-blue-300 font-semibold">3</div>
+                <div className="font-medium text-lg">Add to Button</div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                <pre className="text-sm overflow-x-auto">
+                  {`<button 
+  data-hotlabel="play"
+  onclick="startVideo()">
+  Play Now
+</button>`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };
 
-export default SimplifiedIntegrationDemo;
+// Add these styles to your global CSS or component
+const additionalStyles = `
+  .monaco-editor {
+    padding-top: 12px;
+  }
+  
+  .iframe-preview {
+    background: #0f172a;
+  }
+`;
+
+export default IntegrationTimerDemo;
